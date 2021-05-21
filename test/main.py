@@ -13,7 +13,7 @@ def bar_progress(i):
         sleep(randint(1, 10) / factor)
 
 
-for i in range(1, 9):
+for i in range(1, 5):
     os.environ['TQDM_NAME'] = f'test{i}'
     Thread(target=bar_progress, args=(i, )).start()
 
