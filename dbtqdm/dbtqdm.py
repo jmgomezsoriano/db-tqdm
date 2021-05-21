@@ -6,9 +6,8 @@ from datetime import datetime, timedelta
 from tqdm import tqdm
 
 from dbtqdm.args.server import DEF_DB_HOST, DEF_DB_PORT, DEF_DB_NAME
+from dbtqdm.consts import STATS_COLLECTION
 from dbtqdm.utils import format_interval
-
-STATS_COLLECTION = '_stats_'
 
 
 class EnvironError(Exception):

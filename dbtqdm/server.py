@@ -6,11 +6,10 @@ from logging import getLogger
 
 from pymongo.database import Database
 
-from mongotqdm import connect_db
-from mongotqdm.args.server import TqdmArgParser, DEF_TITLE, DEF_INTERVAL, DEF_DB_PORT, DEF_HOST, DEF_PORT, DEF_DB_HOST, \
-    DEF_DB_NAME
-from mongotqdm.mongo import STATS_COLLECTION
-from mongotqdm.utils import request_base, get_page_path
+from dbtqdm import connect_db
+from dbtqdm.args.server import TqdmArgParser
+from dbtqdm.consts import DEF_TITLE, DEF_INTERVAL, DEF_DB_PORT, DEF_HOST, DEF_PORT, DEF_DB_HOST, DEF_DB_NAME, \
+    STATS_COLLECTION
 
 app = Flask(__name__, template_folder='pages')
 cors = CORS(app, resources={r"/api/*": {"origins": "*"}})
@@ -19,11 +18,11 @@ logger = getLogger(__name__)
 TQDM_ROUTE, STATS_ROUTE = '/tqdm', '/stats'
 web_title, interval = DEF_TITLE, DEF_INTERVAL * 1000
 
+
 @app.route('/')
 def home() -> str:
     """ The home page, which shows some help. """
     global web_title, interval
-    mark_url = request_base(request, TQDM_ROUTE)
     return render_template('index.html', title=web_title, interval=interval)
 
 
