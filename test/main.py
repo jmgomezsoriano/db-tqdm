@@ -2,7 +2,7 @@ import os
 from threading import Thread
 from random import randint
 
-from mongotqdm import tqdm
+from dbtqdm import tqdm
 from time import sleep
 
 
