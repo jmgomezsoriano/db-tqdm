@@ -136,6 +136,8 @@ class MongoTqdm(DatabaseTqdm):
                                f'it is necessary to define the following environment variable: {e.args[0]}')
 
     def save_changes(self):
+        if not self.__collection:
+            return False
         return bool(self.__collection.replace_one({}, self.meter_dict(**self.format_dict), upsert=True))
 
     def close_bar(self, bar: dict) -> None:

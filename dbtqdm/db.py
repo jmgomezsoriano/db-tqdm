@@ -156,6 +156,7 @@ class DatabaseTqdm(tqdm, ABC):
             meter['finished'] = True
             meter['bar_id'] = self.bar_id
             self.close_bar(meter)
+        super(DatabaseTqdm, self).close()
 
     @abstractmethod
     def close_bar(self, bar: dict) -> None:
