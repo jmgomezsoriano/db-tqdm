@@ -9,16 +9,22 @@ function show_bar(bar, only=false) {
 }
 
 function change_bar(bar_id, bar) {
-	$('#' + bar_id + '-desc').text(bar.desc);
+	if($('#' + bar_id + '-desc').text() != bar.desc)
+		$('#' + bar_id + '-desc').text(bar.desc);
 	let progress_bar = document.getElementById(bar_id + '-progress');
 	update_progress(progress_bar, bar.n, bar.initial, bar.total, bar.percentage, bar.colour);
 	let rate = document.getElementById(bar_id + '-speed');
 	update_rate(rate, bar_id, bar.rate, bar.primary_unit, bar.secondary_unit);
-	$('#' + bar_id + '-position').text(bar.n);
-	$('#' + bar_id + '-total').text(bar.total);
-	$('#' + bar_id + '-elapsed').text(bar.elapsed_str);
-	$('#' + bar_id + '-remain').text(bar.remaining_str);
-	$('#' + bar_id + '-eta').text(bar.eta);
+	if($('#' + bar_id + '-position').text() != bar.n)
+		$('#' + bar_id + '-position').text(bar.n);
+	if($('#' + bar_id + '-total').text() != bar.total)
+		$('#' + bar_id + '-total').text(bar.total);
+	if($('#' + bar_id + '-elapsed').text() != bar.elapsed_str)
+		$('#' + bar_id + '-elapsed').text(bar.elapsed_str);
+	if($('#' + bar_id + '-remain').text() != bar.remaining_str)
+		$('#' + bar_id + '-remain').text(bar.remaining_str);
+	if($('#' + bar_id + '-eta').text() != bar.eta)
+		$('#' + bar_id + '-eta').text(bar.eta);
 }
 
 function create_bar(bar_id, bar, only = false) {
@@ -63,7 +69,7 @@ function create_bar(bar_id, bar, only = false) {
 	progress_div.append(progress_bar);
 	// The speed info
 	let speed = document.createElement('h2');
-	update_rate(speed, bar_id, bar.rate, bar.primary_unit, bar.secondary_unit);
+	create_rate(speed, bar_id, bar.rate, bar.primary_unit, bar.secondary_unit);
 	body.append(speed);
 	// The position, elapsed and remain information
 	let ulist = document.createElement('ul');
@@ -116,17 +122,23 @@ function create_bar(bar_id, bar, only = false) {
 }
 
 function update_progress(progress_bar, n, initial, total, percentage, colour) {
-	progress_bar.setAttribute('aria-valuenow', n);
-	progress_bar.setAttribute('aria-valuemin', initial);
-	progress_bar.setAttribute('aria-valuemax', total);
-	progress_bar.style.width = percentage + '%';
-	progress_bar.textContent = Math.round(percentage) + '%';
-	if(colour) {
+	percentage = Math.round(percentage);
+	if(progress_bar.getAttribute("aria-valuenow") != n)
+		progress_bar.setAttribute('aria-valuenow', n);
+	if(progress_bar.getAttribute("aria-valuemin") != initial)
+		progress_bar.setAttribute('aria-valuemin', initial);
+	if(progress_bar.getAttribute("aria-valuemax") != total)
+		progress_bar.setAttribute('aria-valuemax', total);
+	if(progress_bar.style.width != percentage + '%')
+		progress_bar.style.width = percentage + '%';
+	if(progress_bar.textContent != percentage + '%')
+		progress_bar.textContent = percentage + '%';
+	if(colour && progress_bar.style.backgroundColor != colour) {
 		progress_bar.style.backgroundColor = colour;
 	}
 }
 
-function update_rate(elem, bar_name, rate_value, primary_unit_value, secondary_unit_value) {
+function create_rate(elem, bar_name, rate_value, primary_unit_value, secondary_unit_value) {
 	elem.setAttribute('id', bar_name + '-speed');
 	elem.setAttribute('class', 'card-title pricing-card-title');
 	elem.textContent = Math.round(rate_value * 100) / 100;
@@ -141,6 +153,18 @@ function update_rate(elem, bar_name, rate_value, primary_unit_value, secondary_u
 	elem.append(secondary_unit);
 }
 
+function update_rate(elem, bar_name, rate_value, primary_unit_value, secondary_unit_value) {
+	elem.textContent = Math.round(rate_value * 100) / 100;
+	let primary_unit = document.createElement('span');
+	primary_unit.setAttribute('id', bar_name + '-primary-unit');
+	primary_unit.textContent = primary_unit_value
+	elem.append(primary_unit);
+	let secondary_unit = document.createElement('small');
+	secondary_unit.setAttribute('id', bar_name + '-secondary-unit');
+	secondary_unit.setAttribute('class', 'text-muted fw-light');
+	secondary_unit.textContent = '/' + secondary_unit_value;
+	elem.append(secondary_unit);
+}
 function show_bars(bars) {
 	// Update or create the bars
     bars.forEach(e => show_bar(e));
