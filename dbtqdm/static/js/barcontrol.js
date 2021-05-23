@@ -153,18 +153,16 @@ function create_rate(elem, bar_name, rate_value, primary_unit_value, secondary_u
 	elem.append(secondary_unit);
 }
 
-function update_rate(elem, bar_name, rate_value, primary_unit_value, secondary_unit_value) {
-	elem.textContent = Math.round(rate_value * 100) / 100;
-	let primary_unit = document.createElement('span');
-	primary_unit.setAttribute('id', bar_name + '-primary-unit');
-	primary_unit.textContent = primary_unit_value
-	elem.append(primary_unit);
-	let secondary_unit = document.createElement('small');
-	secondary_unit.setAttribute('id', bar_name + '-secondary-unit');
-	secondary_unit.setAttribute('class', 'text-muted fw-light');
-	secondary_unit.textContent = '/' + secondary_unit_value;
-	elem.append(secondary_unit);
+function update_rate(elem, bar_name, rate_value, primary_unit, secondary_unit) {
+	rate = Math.round(rate_value * 100) / 100;
+	if(elem.childNodes[0].textContent != rate)
+		elem.childNodes[0].textContent = rate;
+	if(elem.childNodes[1].textContent != primary_unit)
+		elem.childNodes[1].textContent = primary_unit;
+	if(elem.childNodes[2].textContent != '/' + secondary_unit)
+		elem.childNodes[2].textContent = '/' + secondary_unit;
 }
+
 function show_bars(bars) {
 	// Update or create the bars
     bars.forEach(e => show_bar(e));
