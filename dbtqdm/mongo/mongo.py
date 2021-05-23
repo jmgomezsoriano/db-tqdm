@@ -95,7 +95,7 @@ class MongoTqdm(DatabaseTqdm):
         self._mode = self._db_property('mode', 'TQDM_MODE', False, 'auto', **kwargs)
         if self._mode == 'mongo':
             host, port, replicaset, db_name, bar_name, suffix = self.__db_properties(**kwargs)
-            self._database, self._bar_name, self._suffix = bar_name, db_name, suffix
+            self._database, self._bar_name, self._suffix = db_name, bar_name, suffix
             if self.bar_name == STATS_COLLECTION:
                 raise ValueError(f'The bar_name parameter cannot be the reserved collection "{STATS_COLLECTION}".')
             from pymongo import ASCENDING, DESCENDING
