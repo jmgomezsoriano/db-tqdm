@@ -3,7 +3,7 @@ from typing import Union
 from urllib.parse import urlparse
 from importlib_resources import files
 
-PAGES_MODULE = 'dbtqdm.pages'
+PAGES_MODULE = 'dbtqdm.templates'
 
 
 def request_base(request, service: str = '') -> str:
@@ -42,8 +42,8 @@ def format_date(w: int, d: int, h: int, m: int, s: int):
     return (f'{w}w ' if w else '') + \
            (f'{d}d ' if d else '') + \
            (f'{h}h ' if h else '') + \
-           (f'{m}\' ' if m else '') + \
-           (f'{s}"' if s else '')
+           (f'{m}m ' if m else '') + \
+           (f'{s}s' if s else '')
 
 
 def format_interval(interval: float) -> str:

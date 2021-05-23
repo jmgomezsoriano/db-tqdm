@@ -5,8 +5,7 @@ from typing import Tuple, Union, Any
 from datetime import datetime, timedelta
 from tqdm import tqdm
 
-from dbtqdm.args.server import DEF_DB_HOST, DEF_DB_PORT, DEF_DB_NAME
-from dbtqdm.consts import STATS_COLLECTION
+from dbtqdm.consts import STATS_COLLECTION, DEF_DB_HOST, DEF_DB_PORT, DEF_DB_NAME
 from dbtqdm.utils import format_interval
 
 
@@ -18,6 +17,14 @@ class MongoTqdm(tqdm):
     @property
     def bar_name(self) -> str:
         return self.__bar_name
+
+    @property
+    def suffix(self) -> str:
+        return self.__suffix
+
+    @property
+    def collection_name(self) -> str:
+        return self.bar_name + self.suffix
 
     def __init__(self, iterable: Iterable = None, desc: str = None, total: float = None, leave: bool = True,
                  file: Union[TextIOWrapper, StringIO] = None, n_cols: int = None, min_interval: float = 0.1,
@@ -96,16 +103,19 @@ class MongoTqdm(tqdm):
         :param bar_name: Only for mode 'mongo'. The bar progress name. If it is not set, this function will check if
            there is the environment variable TQDM_NAME. If it is not given, neither parameter o environment variable,
            then an exception is raised.
+        :param suffix: Only for mode 'mongo'. If it is set, the name is form concatenating the bar name with this suffix
+           (name + suffix). This method will use when the bar name is given by environment variable instead of
+           constructor parameter, in order to have several bar progress for the same name.
 
         :return:  decorated iterator.
         """
         self.__collection = None
-        self.__mode = self.__db_property('mode', 'TQDM_MODE', False, 'auto')
+        self.__mode = self.__db_property('mode', 'TQDM_MODE', False, 'auto', **kwargs)
         if self.__mode not in ['auto', 'mongo']:
             raise EnvironError(f'The environment variable TQDM_MODE cannot be "{self.__mode}". '
                                f'The available values are: "auto" or "mongo".')
         if self.__mode == 'mongo':
-            host, port, replicaset, db_name, bar_name = self.__db_properties(**kwargs)
+            host, port, replicaset, db_name, bar_name, suffix = self.__db_properties(**kwargs)
             if bar_name == STATS_COLLECTION:
                 raise ValueError(f'The bar_name parameter cannot be the reserved collection "{STATS_COLLECTION}".')
             from pymongo import ASCENDING, DESCENDING
@@ -116,14 +126,15 @@ class MongoTqdm(tqdm):
             self.__stats = self.__db[STATS_COLLECTION]
             if 'stats_ix' not in self.__stats.index_information():
                 self.__stats.create_index(
-                    [('start_time', DESCENDING), ('bar_name', ASCENDING)], name='stats_ix', unique=True)
+                    [('start_time', DESCENDING), ('bar_ix', ASCENDING)], name='stats_ix', unique=True)
                 self.__stats.create_index([('start_time', DESCENDING)], name='start_ix')
-                self.__stats.create_index('bar_name', name='bar_ix')
-            self.__collection = self.__db[bar_name]
+                self.__stats.create_index('bar_id', name='bar_ix')
             self.__bar_name = bar_name
+            self.__suffix = suffix
+            self.__collection = self.__db[self.collection_name]
             self.__start = datetime.timestamp(datetime.now())
         self.disable = disable
-        for var in ['host', 'port', 'replicaset', 'db', 'name']:
+        for var in ['mode', 'host', 'port', 'replicaset', 'db', 'name', 'suffix']:
             if var in kwargs:
                 del kwargs[var]
         super(MongoTqdm, self).__init__(iterable=iterable, desc=desc, total=total, leave=leave, file=file,
@@ -134,14 +145,15 @@ class MongoTqdm(tqdm):
                                         unit_divisor=unit_divisor, write_bytes=write_bytes, lock_args=lock_args,
                                         nrows=n_rows, colour=colour, delay=delay, gui=gui, **kwargs)
 
-    def __db_properties(self, **kwargs) -> Tuple[str, int, str, str, str]:
+    def __db_properties(self, **kwargs) -> Tuple[str, int, str, str, str, str]:
         try:
             host = self.__db_property('host', 'TQDM_HOST', default=DEF_DB_HOST, **kwargs)
             port = int(self.__db_property('port', 'TQDM_PORT', default=DEF_DB_PORT, **kwargs))
             replicaset = self.__db_property('replicaset', 'TQDM_REPLICASET', **kwargs)
             db_name = self.__db_property('db', 'TQDM_DB', default=DEF_DB_NAME, **kwargs)
             bar_name = self.__db_property('name', 'TQDM_NAME', required=True, **kwargs)
-            return host, port, replicaset, db_name, bar_name
+            suffix = self.__db_property('suffix', 'TQDM_SUFFIX', default='', **kwargs)
+            return host, port, replicaset, db_name, bar_name, suffix
         except KeyError as e:
             raise EnvironError(f'To use the mode "mongo" for tqdm progress bar, '
                                f'it is necessary to define the following environment variable: {e.args[0]}')
@@ -150,26 +162,30 @@ class MongoTqdm(tqdm):
         if self.__mode == 'auto':
             return super(MongoTqdm, self).display(msg, pos)
         self.format_dict['bar_name'] = self.bar_name
+        self.format_dict['suffix'] = self.suffix
         self.format_dict['colour'] = self.colour
         return bool(self.__collection.replace_one({}, self.meter_dict(**self.format_dict), upsert=True))
 
     def close(self) -> None:
         if self.__mode == 'mongo' and self.__collection:
-            collection, stats, start, bar_name = self.__collection, self.__stats, self.__start, self.__bar_name
+            collection, stats, start = self.__collection, self.__stats, self.__start
+            bar_name, suffix = self.bar_name, self.suffix
             collection.drop()
             self.__collection = None
             meter = self.meter_dict(**self.format_dict)
-            meter['bar_name'], meter['start_time'] = bar_name, start
+            meter['bar_name'], meter['suffix'], meter['start_time'] = bar_name, suffix, start
             meter['end_time'] = datetime.timestamp(datetime.now())
+            meter['end_time_str'] = datetime.utcfromtimestamp(start)
+            meter['finished'] = True
+            meter['bar_id'] = self.collection_name
             if bar_name:
-                stats.replace_one({'start_time': start, 'bar_name': bar_name}, meter, upsert=True)
+                stats.replace_one({'start_time': start, 'bar_name': bar_name, 'suffix': suffix}, meter, upsert=True)
 
     @staticmethod
     def __db_property(var: str, env: str, required: bool = False, default: Any = None, **kwargs):
         return kwargs[var] if var in kwargs else environ[env] if required or env in environ else default
 
-    @staticmethod
-    def meter_dict(n: float, total: float, elapsed: float, prefix: str = '',
+    def meter_dict(self, n: float, total: float, elapsed: float, prefix: str = '',
                    unit: str = 'it', unit_scale: Union[bool, int, float] = False, rate: str = None,
                    postfix: Any = '', unit_divisor: float = 1000, initial: float = 0,
                    colour: str = None, **extra_kwargs) -> dict:
@@ -222,4 +238,6 @@ class MongoTqdm(tqdm):
             n=n, total=total, unit=unit, primary_unit=primary_unit, secondary_unit=secondary_unit,
             unit_scale=unit_scale, unit_divisor=unit_divisor,
             rate=rate, elapsed=elapsed, elapsed_str=elapsed_str, remaining=remaining, remaining_str=remaining_str,
-            eta=eta, percentage=percentage, desc=prefix + postfix, colour=colour, **extra_kwargs)
+            eta=eta, percentage=percentage, desc=prefix + postfix, colour=colour,
+            bar_name=self.bar_name, suffix=self.suffix, start=self.__start, finished=False,
+            start_time_str=datetime.utcfromtimestamp(self.__start), **extra_kwargs)
