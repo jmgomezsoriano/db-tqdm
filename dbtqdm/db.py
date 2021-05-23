@@ -4,7 +4,7 @@ from typing import Iterable, Union, Any, Tuple, List
 from os import environ
 from datetime import datetime, timedelta
 
-from tqdm import tqdm
+from tqdm.auto import tqdm
 
 from dbtqdm.consts import DEF_DB_NAME
 from dbtqdm.utils import format_interval

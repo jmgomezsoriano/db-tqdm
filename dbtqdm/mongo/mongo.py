@@ -99,7 +99,7 @@ class MongoTqdm(DatabaseTqdm):
             if self.bar_name == STATS_COLLECTION:
                 raise ValueError(f'The bar_name parameter cannot be the reserved collection "{STATS_COLLECTION}".')
             from pymongo import ASCENDING, DESCENDING
-            from dbtqdm.dbutils import connect_db
+            from dbtqdm.mongo import connect_db
 
             self.__client = connect_db(host, port, replicaset)
             self.__db = self.__client[db_name]
