@@ -16,6 +16,11 @@
     <header>
         <h1>{{ bar_name }} progress bar</h1>
     </header>
+    <h2 id="loading-section"><span class="spinner-border" role="status"><span class="sr-only"></span></span>
+    Loading progress bar...</h2>
+    <div id="error-section" class="alert alert-danger d-none" role="alert">
+        <p id="error-msg"></p>
+    </div>
     <main>
         <div id="meters" class="row row-cols-1 mb-3 text-center">
         </div>

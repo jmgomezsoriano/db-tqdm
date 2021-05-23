@@ -213,10 +213,13 @@ function update_bars() {
     $.ajax({
     	url: $SCRIPT_ROOT + "/tqdm",
     	success: function(data){
+    		hide_error();
     		show_bars(data.bars);
+    		hide_loading();
     	},
-    	error: function(jqXHR, textStatus, errorThrown){
-    		alert(textStatus + " " + jqXHR.status + ": " + jqXHR.responseText);
+    	error: function(jqXHR, textStatus, errorThrown) {
+    		hide_loading();
+    		show_error(jqXHR.responseText);
     	}
     });
 }
@@ -225,10 +228,13 @@ function update_bar(bar_id, only = false) {
     $.ajax({
     	url: $SCRIPT_ROOT + "/tqdm/" + bar_id,
     	success: function(data) {
+    		hide_error();
     		show_bar(data, only);
+    		hide_loading();
     	},
     	error: function(jqXHR, textStatus, errorThrown){
-    		alert(textStatus + " " + jqXHR.status + ": " + jqXHR.responseText);
+    		hide_loading();
+    		show_error(jqXHR.responseText);
     	}
     });
 }
@@ -237,10 +243,29 @@ function remove_bar(bar_id) {
 	$.ajax({
     	url: $SCRIPT_ROOT + "/remove/" + bar_id,
     	success: function(data) {
+    		hide_error();
 			$("#" + bar_id).remove();
     	},
     	error: function(jqXHR, textStatus, errorThrown) {
-    		alert(textStatus + " " + jqXHR.status + ": " + jqXHR.responseText);
+    		show_error(jqXHR.responseText);
     	}
     });
+}
+
+function show_error(msg) {
+	let error = $('#error-msg');
+	error.text(msg);
+	error_section = $('#error-section');
+	error_section.removeClass('d-none');
+	error_section.addClass('d-block');
+}
+
+function hide_error() {
+	error_section = $('#error-section');
+	error_section.removeClass('d-block');
+	error_section.addClass('d-none');
+}
+
+function hide_loading() {
+	$('#loading-section').addClass('d-none');
 }
