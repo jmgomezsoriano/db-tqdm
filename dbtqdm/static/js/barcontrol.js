@@ -2,13 +2,13 @@ function show_bar(bar, only=false) {
 	let bar_id = bar.bar_name + bar.suffix
 	// console.log(bar);
 	if($('#' + bar_id).length) {
-		change_bar(bar_id, bar);
+		change_bar(bar_id, bar, only);
 	} else {
 		create_bar(bar_id, bar, only);
 	}
 }
 
-function change_bar(bar_id, bar) {
+function change_bar(bar_id, bar, only) {
 	if($('#' + bar_id + '-desc').text() != bar.desc)
 		$('#' + bar_id + '-desc').text(bar.desc);
 	let progress_bar = document.getElementById(bar_id + '-progress');
@@ -25,6 +25,14 @@ function change_bar(bar_id, bar) {
 		$('#' + bar_id + '-remain').text(bar.remaining_str);
 	if($('#' + bar_id + '-eta').text() != bar.eta)
 		$('#' + bar_id + '-eta').text(bar.eta);
+	if(only && bar.finished) {
+		$('#' + bar_id + '-eta-li').remove();
+		create_finished($('#' + bar_id + '-ulist'), bar_id, bar.end_time_str);
+	} else {
+		create_eta($('#' + bar_id + '-ulist'), bar_id, bar.eta);
+		$('#' + bar_id + '-end-li').remove();
+		$('#' + bar_id + '-end-msg-li').remove();
+	}
 }
 
 function create_bar(bar_id, bar, only = false) {
@@ -73,6 +81,7 @@ function create_bar(bar_id, bar, only = false) {
 	body.append(speed);
 	// The position, elapsed and remain information
 	let ulist = document.createElement('ul');
+	ulist.setAttribute('id', bar_id + '-ulist');
 	ulist.setAttribute('class', 'list-unstyled mt-3 mb-4');
 	body.append(ulist);
 	let position = document.createElement('li');
@@ -89,16 +98,9 @@ function create_bar(bar_id, bar, only = false) {
 		start.innerHTML = '<b>Started:</b> <span id="' + bar_id + '-start">' + bar.start_time_str + '</span>';
 		ulist.append(start);
 		if(bar.finished) {
-			let end = document.createElement('li');
-			end.innerHTML = '<b>Finished:</b> <span id="' + bar_id + '-end">' + bar.end_time_str + '</span>';
-			ulist.append(end);
-			let finished = document.createElement('li');
-			finished.innerHTML = '<h2>Finished</h2>';
-			ulist.append(finished);
+			create_finished(ulist, bar_id, bar.end_time_str);
 		} else {
-			let eta = document.createElement('li');
-			eta.innerHTML = '<b>ETA:</b> <span id="' + bar_id + '-eta">' + bar.eta + '</span>';
-			ulist.append(eta);
+			create_eta(ulist, bar_id, bar.eta);
 		}
 	}
 	// The buttons
@@ -119,6 +121,28 @@ function create_bar(bar_id, bar, only = false) {
 		body.append(close_btn);
 	}
 	$('#meters').prepend(col);
+}
+
+function create_finished(ulist, bar_id, end_time_str) {
+	if(!$('#' + bar_id + '-end-msg').length) {
+		let end = document.createElement('li');
+		end.setAttribute('id', bar_id + '-end-li');
+		end.innerHTML = '<b>Finished:</b> <span id="' + bar_id + '-end">' + end_time_str + '</span>';
+		ulist.append(end);
+		let finished = document.createElement('li');
+		finished.setAttribute('id', bar_id + '-end-msg-li');
+		finished.innerHTML = '<h2 id="' + bar_id + '-end-msg">Finished</h2>';
+		ulist.append(finished);
+	}
+}
+
+function create_eta(ulist, bar_id, eta_value) {
+	if(!$('#' + bar_id + '-eta').length) {
+		let eta = document.createElement('li');
+		eta.setAttribute('id', bar_id + '-eta-li');
+		eta.innerHTML = '<b>ETA:</b> <span id="' + bar_id +'-eta">' + eta_value + '</span>';
+		ulist.append(eta);
+	}
 }
 
 function update_progress(progress_bar, n, initial, total, percentage, colour) {

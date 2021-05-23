@@ -7,7 +7,7 @@ from logging import getLogger
 from pymongo import DESCENDING
 from pymongo.database import Database
 
-from dbtqdm import connect_db
+from dbtqdm.mongo import connect_db
 from dbtqdm.args.server import TqdmArgParser
 from dbtqdm.consts import DEF_TITLE, DEF_INTERVAL, DEF_DB_PORT, DEF_HOST, DEF_PORT, DEF_DB_HOST, DEF_DB_NAME, \
     STATS_COLLECTION
@@ -38,6 +38,7 @@ def bar(bar_id: str) -> str:
 def health():
     """ Check if this service is alive. """
     return "I am ready!"
+
 
 @app.route(TQDM_ROUTE + '/<bar_id>', methods=['GET'])
 def tqdm(bar_id: str = None) -> Union[dict, Tuple[Response, int]]:

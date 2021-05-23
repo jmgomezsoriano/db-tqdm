@@ -2,7 +2,7 @@ import os
 from threading import Thread
 from random import randint
 
-from dbtqdm import tqdm
+from dbtqdm.mongo import tqdm
 from time import sleep
 
 
@@ -19,6 +19,10 @@ for i, colour in [(1, 'red'), (2, 'green'), (3, 'purple'), (4, None)]:
     Thread(target=bar_progress, args=(i, colour)).start()
 
 
-for i in tqdm(range(0, 10), desc='With suffix', mode='mongo', name='test1', suffix='_other'):
+for i in tqdm(range(0, 20), desc='With suffix', mode='mongo', name='test1', suffix='_other'):
     sleep(1)
+
+for i in tqdm(range(0, 20), desc='Normal bar'):
+    sleep(1)
+
 print('Goodbye')
