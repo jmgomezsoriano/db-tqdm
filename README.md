@@ -167,3 +167,5 @@ If you have the default values, only need to run the following to start the serv
 ```shell
 dbtqdm
 ```
+
+**Note:** At the moment, the argument 'db_type' is not supported, and it will be ignored.
