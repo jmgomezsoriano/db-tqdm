@@ -19,26 +19,44 @@ class DatabaseTqdm(tqdm, ABC):
 
     @property
     def mode(self) -> str:
+        """
+        :return: The TQDM mode. 'auto' for normal tqdm auto mode or 'mongo' to use MongoDB database.
+        """
         return self._mode
 
     @property
     def database(self) -> str:
+        """
+        :return: The database name for any database mode.
+        """
         return self._database
 
     @property
     def bar_name(self) -> str:
+        """
+        :return: The bar progress name for any database mode.
+        """
         return self._bar_name
 
     @property
     def suffix(self) -> str:
+        """
+        :return: The suffix to build the bar id from the bar name. It will value bar_name + suffix.
+        """
         return self._suffix
 
     @property
     def bar_id(self) -> str:
+        """
+        :return: The bar progress id. It will formed with bar_name + suffix.
+        """
         return self.bar_name + self.suffix
 
     @property
     def start(self) -> float:
+        """
+        :return: Timestamp when the bar progress started.
+        """
         return self._start
 
     def __init__(self, iterable: Iterable = None, desc: str = None, total: float = None, leave: bool = True,
@@ -113,8 +131,8 @@ class DatabaseTqdm(tqdm, ABC):
            the environment variable TQDM_HOST. By default, localhost.
         :param port: Only for mode 'mongo'. The database port. If it is not set, this function will check if there is
            the environment variable TQDM_PORT. By default, 27017.
-        :param replicaset: Only for mode 'mongo'. The database replicaset. If it is not set, this function will check if there is
-           the environment variable TQDM_REPLICASET. By default, do not use it.
+        :param replicaset: Only for mode 'mongo'. The database replicaset. If it is not set, this function will check if
+           there is the environment variable TQDM_REPLICASET. By default, do not use it.
         :param bar_name: Only for mode 'mongo'. The bar progress name. If it is not set, this function will check if
            there is the environment variable TQDM_NAME. If it is not given, neither parameter o environment variable,
            then an exception is raised.
@@ -147,12 +165,14 @@ class DatabaseTqdm(tqdm, ABC):
                                            nrows=n_rows, colour=colour, delay=delay, gui=gui, **kwargs)
 
     def close(self) -> None:
+        """ Close the TQDM bar progress. """
         if self._mode == 'mongo':
             bar_name, suffix, start = self.bar_name, self.suffix, self._start
             meter = self.meter_dict(**self.format_dict)
             meter['bar_name'], meter['suffix'], meter['start_time'] = bar_name, suffix, start
+            meter['start_time_str'] = datetime.utcfromtimestamp(start)
             meter['end_time'] = datetime.timestamp(datetime.now())
-            meter['end_time_str'] = datetime.utcfromtimestamp(start)
+            meter['end_time_str'] = datetime.utcfromtimestamp(datetime.timestamp(datetime.now()))
             meter['finished'] = True
             meter['bar_id'] = self.bar_id
             self.close_bar(meter)
@@ -160,26 +180,51 @@ class DatabaseTqdm(tqdm, ABC):
 
     @abstractmethod
     def close_bar(self, bar: dict) -> None:
+        """ Send the message to the class children to close the bar.
+        :param bar: The bar information.
+        """
         pass
 
     def display(self, msg: str = None, pos: int = None) -> bool:
+        """ Display the TQDM bar progress. If the mode is 'auto', it will be displayed as usual.
+          If not, it will update the database information with the new values of the bar progress.
+
+        :param msg: The bar message.
+        :param pos: The current progress bar position.
+        :return: True if anything was well, otherwise an exception is raised.
+        """
         if self._mode == 'auto':
             return super(DatabaseTqdm, self).display(msg, pos)
         self.format_dict['bar_name'] = self.bar_name
         self.format_dict['suffix'] = self.suffix
         self.format_dict['colour'] = self.colour
         self.save_changes()
+        return True
 
     @abstractmethod
-    def save_changes(self):
+    def save_changes(self) -> None:
+        """ Save changes of the bar progress in the database. """
         pass
 
     @staticmethod
-    def _db_property(var: str, env: str, required: bool = False, default: Any = None, **kwargs):
+    def _db_property(var: str, env: str, required: bool = False, default: Any = None, **kwargs) -> Any:
+        """ Get a property value if it exists either in the kwargs argument or in the environment variables.
+        :param var: The variable name.
+        :param env: The environment variable name.
+        :param required: True if that variable is required, otherwise False.
+        :param default: The default value when the variable is not required and it does not exist.
+        :return: The variable value.
+        :raise KeyError: If the variable does not exist.
+        """
         return kwargs[var] if var in kwargs else environ[env] if required or env in environ else default
 
     @staticmethod
-    def _remove_extra_parameters(parameters: List[str], kwargs: dict):
+    def _remove_extra_parameters(parameters: List[str], kwargs: dict) -> None:
+        """ Remove the kwargs parameters that only are used in this TQDM object.
+          All the extra parameters that are not used in the parent TQDM objects are necessary to remove.
+        :param parameters: Parameters to remove.
+        :param kwargs: The kwargs parameters.
+        """
         for var in parameters:
             if var in kwargs:
                 del kwargs[var]
@@ -234,7 +279,7 @@ class DatabaseTqdm(tqdm, ABC):
             eta = datetime.max
 
         return dict(
-            n=n, total=total, unit=unit, primary_unit=primary_unit, secondary_unit=secondary_unit,
+            n=n, initial=initial, total=total, unit=unit, primary_unit=primary_unit, secondary_unit=secondary_unit,
             unit_scale=unit_scale, unit_divisor=unit_divisor,
             rate=rate, elapsed=elapsed, elapsed_str=elapsed_str, remaining=remaining, remaining_str=remaining_str,
             eta=eta, percentage=percentage, desc=prefix + postfix, colour=colour,
