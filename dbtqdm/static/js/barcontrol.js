@@ -28,7 +28,7 @@ function change_bar(bar_id, bar, only) {
 	if(only && bar.finished) {
 		$('#' + bar_id + '-eta-li').remove();
 		create_finished($('#' + bar_id + '-ulist'), bar_id, bar.end_time_str);
-	} else {
+	} else if(only) {
 		create_eta($('#' + bar_id + '-ulist'), bar_id, bar.eta);
 		$('#' + bar_id + '-end-li').remove();
 		$('#' + bar_id + '-end-msg-li').remove();
