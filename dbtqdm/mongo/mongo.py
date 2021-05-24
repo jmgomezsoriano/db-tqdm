@@ -123,6 +123,13 @@ class MongoTqdm(DatabaseTqdm):
                                         n_rows=n_rows, colour=colour, delay=delay, gui=gui, **kwargs)
 
     def __db_properties(self, **kwargs) -> Tuple[str, int, str, str, str, str]:
+        """ Get the database connection parameters from the kwargs if they are defined or
+          from the environment variables.
+        :param kwargs: The extra parameters to connect with the database.
+        :return: A tuple with the host, port, replicaset, database name, progress bar name and suffix.
+        :raise EnvironError: If the necessary parameters are not defined neither the kwargs parameter nor
+          environ variables.
+        """
         try:
             host = self._db_property('host', 'TQDM_HOST', default=DEF_DB_HOST, **kwargs)
             port = int(self._db_property('port', 'TQDM_PORT', default=DEF_DB_PORT, **kwargs))
@@ -136,11 +143,16 @@ class MongoTqdm(DatabaseTqdm):
                                f'it is necessary to define the following environment variable: {e.args[0]}')
 
     def save_changes(self):
+        """ Save the current data of the progress bar into MongoDB. """
         if not self.__collection:
             return False
         return bool(self.__collection.replace_one({}, self.meter_dict(**self.format_dict), upsert=True))
 
     def close_bar(self, bar: dict) -> None:
+        """ The  final action when the progress bar is finished.
+          Usually, it stores the data into a history table or collection.
+        :param bar: The progress bar information.
+        """
         if self.__collection:
             bar_name, suffix, start = self.bar_name, self.suffix, self.start
             collection, stats = self.__collection, self.__stats

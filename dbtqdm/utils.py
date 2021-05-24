@@ -1,31 +1,11 @@
-import os
-from typing import Union
-from urllib.parse import urlparse
-from importlib_resources import files
-
-PAGES_MODULE = 'dbtqdm.templates'
+from typing import Tuple
 
 
-def request_base(request, service: str = '') -> str:
+def split_interval(t: float) -> Tuple[int, int, int, int, int]:
+    """ Split an interval of time into weeks, days, hours, minutes, and seconds.
+    :param t: The time interval to split.
+    :return: A tuple with the number of weeks, days, hours, minutes, and seconds.
     """
-    Obtain the final URL to the service dynamically from a request.
-
-    :param request: The request to obtain the URL.
-    :param service: The path to the servies to join with the request base.
-    :return: A string with the URL.
-    """
-    uri = urlparse(request.base_url)
-    path = request.environ['HTTP_X_ENVOY_ORIGINAL_PATH'] if 'HTTP_X_ENVOY_ORIGINAL_PATH' in request.environ else ''
-    if path.endswith('/') and service.startswith('/'):
-        path += service[1:]
-    elif not path.endswith('/') and not service.startswith('/'):
-        path += '/' + service
-    else:
-        path += service
-    return f'{uri.scheme}://{uri.hostname}' + (f':{uri.port}' if uri.port else '') + f'{path}'
-
-
-def time2date(t: float) -> (int, int, int, int, int):
     seconds = round(t)
     minutes = seconds // 60
     seconds = seconds % 60
@@ -38,7 +18,16 @@ def time2date(t: float) -> (int, int, int, int, int):
     return weeks, days, hours, minutes, seconds
 
 
-def format_date(w: int, d: int, h: int, m: int, s: int):
+def interval2str(w: int, d: int, h: int, m: int, s: int):
+    """ Convert splited weeks, days, hours, minutes, and seconds into a string.
+    :param w: The number of weeks.
+    :param d: The number of days.
+    :param h: The number of hours.
+    :param m: The number of minutes.
+    :param s: The number of seconds.
+    :return: The formatted interval in this format: ?w ?d ?h ?m ?s. Where w are weeks, d are days, m are minutes,
+       and s are seconds
+    """
     return (f'{w}w ' if w else '') + \
            (f'{d}d ' if d else '') + \
            (f'{h}h ' if h else '') + \
@@ -47,22 +36,9 @@ def format_date(w: int, d: int, h: int, m: int, s: int):
 
 
 def format_interval(interval: float) -> str:
-    return format_date(*time2date(interval))
-
-
-def get_page_path(file: str) -> Union[str, None]:
-    """ Get a resource path from data folder of the installation library in production environment or the data folder
-      in development environment.
-
-    :param file: The file name to get its path.
-    :return: The absolute path to the file.
+    """ Format an interval of time.
+    :param interval: The interval of time to format.
+    :return: The formated interval in this format: ?w ?d ?h ?m ?s. Where w are weeks, d are days, m are minutes,
+       and s are seconds
     """
-    # Try to find this file in the module installation directory.
-    file_path = files(PAGES_MODULE).joinpath(file)
-    if os.path.exists(file_path):
-        return str(file_path)
-    # If not, it is supposed that are you working in develop environment, then return the path to that files
-    file_path = os.path.join(*(PAGES_MODULE.split('.') + [file]))
-    if os.path.exists(file_path):
-        return file_path
-    return None
+    return interval2str(*split_interval(interval))
