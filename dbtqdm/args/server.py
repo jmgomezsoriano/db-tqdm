@@ -30,7 +30,7 @@ class TqdmArgParser(object):
     @property
     def db_type(self) -> str:
         """
-        :return: The database manager type. By default, "mongo". At the momento only mongo is available.
+        :return: The database manager type. By default, "mongo". At the moment only mongo is available.
         """
         return self._args.db_type
 

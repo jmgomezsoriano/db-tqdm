@@ -80,8 +80,8 @@ class MongoTqdm(DatabaseTqdm):
            the environment variable TQDM_HOST. By default, localhost.
         :param port: Only for mode 'mongo'. The database port. If it is not set, this function will check if there is
            the environment variable TQDM_PORT. By default, 27017.
-        :param replicaset: Only for mode 'mongo'. The database replicaset. If it is not set, this function will check if there is
-           the environment variable TQDM_REPLICASET. By default, do not use it.
+        :param replicaset: Only for mode 'mongo'. The database replicaset. If it is not set, this function will check
+           if there is the environment variable TQDM_REPLICASET. By default, do not use it.
         :param bar_name: Only for mode 'mongo'. The bar progress name. If it is not set, this function will check if
            there is the environment variable TQDM_NAME. If it is not given, neither parameter o environment variable,
            then an exception is raised.

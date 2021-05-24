@@ -38,7 +38,7 @@ def interval2str(w: int, d: int, h: int, m: int, s: int):
 def format_interval(interval: float) -> str:
     """ Format an interval of time.
     :param interval: The interval of time to format.
-    :return: The formated interval in this format: ?w ?d ?h ?m ?s. Where w are weeks, d are days, m are minutes,
+    :return: The formatted interval in this format: ?w ?d ?h ?m ?s. Where w are weeks, d are days, m are minutes,
        and s are seconds
     """
     return interval2str(*split_interval(interval))
