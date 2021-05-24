@@ -1,0 +1,3 @@
+include dbtqdm/templates/*
+include dbtqdm/static/*
+include dbtqdm/static/js/*
