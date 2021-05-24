@@ -53,7 +53,7 @@ setuptools.setup(
     include_package_data=True,
     package_data={
         'dbtqdm': ['dbtqdm/templates/*'],
-        'static': ['dbtqdm/static/js/*'],
+        'static': ['dbtqdm/static/*','dbtqdm/static/js/*'],
     },
     classifiers=[
         "Programming Language :: Python :: 3",
