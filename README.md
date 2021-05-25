@@ -200,9 +200,13 @@ All these variables and parameters only work with the mode **mongo**. With mode 
 
 ## To do
 
-### Message when there is any active process bar
+### Message when there are any active process bar
 
-Show a message when there is any active process bar.
+Show a message when there are no active process bars.
+
+### User and password for MongoDB connection
+
+Add the possibility to set the user and password for the MongoDB connection.
 
 ### Create a historical view of finished processes
 
@@ -216,6 +220,11 @@ by start time.
 The core of the module is ready to use another database managers creating classes inherited from _DatabaseTqdm_.
 However, the server process is not prepared to use other database managers, only MongoDB. 
 It could be interesting to refactor the code to add this functionality.
+
+### Use Redis or Kafka
+
+This can be adapted (but without historical information) to be used with [Redis](https://redis.io/) or 
+[Kafka](https://kafka.apache.org/) platforms.
 
 ### Pass collections to registers 
 
