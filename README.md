@@ -170,6 +170,33 @@ dbtqdm
 
 **Note:** At the moment, the argument 'db_type' is not supported, and it will be ignored.
 
+## Table of variables and parameters
+
+All these variables and parameters only work with the mode **mongo**. With mode **auto** they are ignored.
+
+### Environment variables
+
+| Variable        | Description                                                                         |
+|-----------------|-------------------------------------------------------------------------------------|
+| TQDM_MODE       | The working mode of tqdm process bar:<br/><ul><li>'**auto**': Normal mode (by default).</li><li>'**mongo**': The MongoDB mode.</li></ul> |
+| TQDM_NAME       | The progress bar name. It will use to identify the progress bar among others.       |
+| TQDM_HOST       | The database host. By default, localhost.                                           |
+| TQDM_PORT       | The database port. By default, 27017.                                               |
+| TQDM_REPLICASET | The replicaset for MongoDB. By default, it is not used.                             |
+| TQDM_DB_NAME    | The database name where the progress bar states are stored. By default, '**tqdm**'. |
+
+### Parameters
+| Parameter  | Description                                                                                                   |
+|------------|-------------------------------------------------------------------------------------------|
+| mode       | The working mode of tqdm process bar:<br/><ul><li>'**auto**': Normal mode (by default).</li><li>'**mongo**': The MongoDB mode.</li></ul> |
+| name       | The progress bar name. It will use to identify the progress bar among others.             |
+| suffix     | The suffix to add to the bar name. Together the name, it will use to identify the progress bar among others in the case that there are multiple progress bars with the same name. |
+| host       | The database host. By default, localhost.                                                 |
+| port       | The database port. By default, 27017.                                                     |
+| replicaset | The replicaset for MongoDB. By default, it is not used.                                   |
+| db         | The database name where the progress bar states are stored. By default, '**tqdm**'.       |
+
+
 ## To do
 
 ### Message when there is any active process bar
