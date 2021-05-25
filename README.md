@@ -1,7 +1,8 @@
 # db-tqdm
-A tqdm bar progress that works with MongoDB instead of console.
+A web based tqdm process bars.
 
-This TQDM based module is very useful for web, airflow or similar environments. 
+This TQDM based module is very useful for web, airflow, servers or similar environments which do not have console 
+to show the typical tqdm process bars.
 In these environments are not useful to use the standard TQDM module because the access to the console or log files are
 not easy, and if it writes into logs, this one are fulfilled with the progress bar information instead of the
 real information log data.
