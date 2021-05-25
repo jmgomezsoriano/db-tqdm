@@ -169,3 +169,29 @@ dbtqdm
 ```
 
 **Note:** At the moment, the argument 'db_type' is not supported, and it will be ignored.
+
+## To do
+
+### Message when there is any active process bar
+
+Show a message when there is any active process bar.
+
+### Create a historical view of finished processes
+
+In the collection _&#95;stats&#95;_ are the historical information about the finished processes. 
+It could be interesting to use them in a view with this information. The idea is to use the home page, below 
+the progress bars in the main page, to add a section with a paged table with the finished processes ordered descending
+by start time.
+
+### Generalize to be able to use other database managers
+
+The core of the module is ready to use another database managers creating classes inherited from _DatabaseTqdm_.
+However, the server process is not prepared to use other database managers, only MongoDB. 
+It could be interesting to refactor the code to add this functionality.
+
+### Pass collections to registers 
+
+I made the design decision to create each process bar in a MongoDB collection instead of create a register for each
+process. I do not sure because I made that decision, and I think it would be better to replace the different collections
+by registers of a unique MongoDB collection.
+
