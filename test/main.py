@@ -14,15 +14,15 @@ def bar_progress(i, colour):
         sleep(randint(1, 10) / factor)
 
 
+for i in tqdm(range(0, 20), desc='Normal bar'):
+    sleep(1)
+
 for i, colour in [(1, 'red'), (2, 'green'), (3, 'purple'), (4, None)]:
     os.environ['TQDM_NAME'] = f'test{i}'
     Thread(target=bar_progress, args=(i, colour)).start()
 
 
 for i in tqdm(range(0, 20), desc='With suffix', mode='mongo', name='test1', suffix='_other'):
-    sleep(1)
-
-for i in tqdm(range(0, 20), desc='Normal bar'):
     sleep(1)
 
 print('Goodbye')
