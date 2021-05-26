@@ -15,6 +15,7 @@ class EnvironError(Exception):
 
 
 class DatabaseTqdm(tqdm, ABC):
+    """ Class to create a TQDM process bar based on MongoDB. """
     __metaclass__ = ABCMeta
 
     @property
@@ -66,7 +67,8 @@ class DatabaseTqdm(tqdm, ABC):
                  dynamic_n_cols: bool = False, smoothing: float = 0.3, bar_format: str = None,
                  initial: Union[int, float] = 0, position: int = None, postfix: Union[dict, Any] = None,
                  unit_divisor: float = 1000, write_bytes: bool = None, lock_args: Tuple = None,
-                 n_rows: int = None, colour: str = None, delay: float = 0, gui: bool = False, **kwargs) -> None:
+                 n_rows: int = None, colour: str = None, delay: float = 0, gui: bool = False,
+                 mode: str = 'auto', database: str = 'tqdm', name: str = None, suffix: str = None, **kwargs) -> None:
         """
         :param iterable: Iterable to decorate with a progressbar. Leave blank to manually manage the updates.
         :param desc: Prefix for the progressbar.
@@ -127,12 +129,7 @@ class DatabaseTqdm(tqdm, ABC):
             If set, will attempt to use matplotlib animations for a graphical output [default: False].
         :param mode: Two modes: auto (normal tqdm behavior), or mongo (using MongoDB as bar progress).
             If it is not set, this function will check if there is the environment variable TQDM_MODE. By default, auto.
-        :param host: Only for mode 'mongo'. The database host. If it is not set, this function will check if there is
-           the environment variable TQDM_HOST. By default, localhost.
-        :param port: Only for mode 'mongo'. The database port. If it is not set, this function will check if there is
-           the environment variable TQDM_PORT. By default, 27017.
-        :param replicaset: Only for mode 'mongo'. The database replicaset. If it is not set, this function will check if
-           there is the environment variable TQDM_REPLICASET. By default, do not use it.
+        :param database: The database name. By default, tqdm.
         :param bar_name: Only for mode 'mongo'. The bar progress name. If it is not set, this function will check if
            there is the environment variable TQDM_NAME. If it is not given, neither parameter o environment variable,
            then an exception is raised.
@@ -142,16 +139,15 @@ class DatabaseTqdm(tqdm, ABC):
 
         :return:  decorated iterator.
         """
-        self._mode = self._db_property('mode', 'TQDM_MODE', False, 'auto', **kwargs)
+        self._mode = self._db_property('mode', mode, 'TQDM_MODE', False, 'auto')
         if self._mode not in ['auto', 'mongo']:
             raise EnvironError(f'The environment variable TQDM_MODE cannot be "{self._mode}". '
                                f'The available values are: "auto" or "mongo".')
         if self.mode == 'mongo':
             try:
-                self._database = self._db_property('db', 'TQDM_DB', default=DEF_DB_NAME, **kwargs)
-                self._bar_name = self._db_property('name', 'TQDM_NAME', required=True, **kwargs)
-                self._suffix = self._db_property('suffix', 'TQDM_SUFFIX', default='', **kwargs)
-                self._remove_extra_parameters(['mode', 'db', 'name', 'suffix'], kwargs)
+                self._database = self._db_property('db', database, 'TQDM_DB', default=DEF_DB_NAME)
+                self._bar_name = self._db_property('name', name, 'TQDM_NAME', required=True)
+                self._suffix = self._db_property('suffix', suffix, 'TQDM_SUFFIX', default='')
             except KeyError as e:
                 raise EnvironError(f'To use the mode "{self.__name__}" for tqdm progress bar, '
                                    f'it is necessary to define the following environment variable: {e.args[0]}')
@@ -185,8 +181,8 @@ class DatabaseTqdm(tqdm, ABC):
         """
         pass
 
-    def disp(self, **kwargs):
-        return super(DatabaseTqdm, self).display(**kwargs)
+    # def disp(self, **kwargs):
+    #     return super(DatabaseTqdm, self).display(**kwargs)
 
     def display(self, msg: str = None, pos: int = None, **kwargs) -> bool:
         """ Display the TQDM bar progress. If the mode is 'auto', it will be displayed as usual.
@@ -210,27 +206,21 @@ class DatabaseTqdm(tqdm, ABC):
         pass
 
     @staticmethod
-    def _db_property(var: str, env: str, required: bool = False, default: Any = None, **kwargs) -> Any:
+    def _db_property(param_name: str, param_value: Any, env: str, required: bool = False, default: Any = None) -> Any:
         """ Get a property value if it exists either in the kwargs argument or in the environment variables.
-        :param var: The variable name.
+        :param param_value: The variable name.
         :param env: The environment variable name.
         :param required: True if that variable is required, otherwise False.
         :param default: The default value when the variable is not required and it does not exist.
         :return: The variable value.
         :raise KeyError: If the variable does not exist.
         """
-        return kwargs[var] if var in kwargs else environ[env] if required or env in environ else default
-
-    @staticmethod
-    def _remove_extra_parameters(parameters: List[str], kwargs: dict) -> None:
-        """ Remove the kwargs parameters that only are used in this TQDM object.
-          All the extra parameters that are not used in the parent TQDM objects are necessary to remove.
-        :param parameters: Parameters to remove.
-        :param kwargs: The kwargs parameters.
-        """
-        for var in parameters:
-            if var in kwargs:
-                del kwargs[var]
+        if env in environ:
+            return environ[env]
+        if param_value is None and required:
+            raise ValueError(f'The parameter "{param_name}" is required for the current TQDM mode, however, neither, '
+                             f'it have no value, nor it is not defined in the environment variable "{env}".')
+        return default if param_value is None else param_value
 
     def meter_dict(self, n: float, total: float, elapsed: float, prefix: str = '',
                    unit: str = 'it', unit_scale: Union[bool, int, float] = False, rate: str = None,

@@ -8,6 +8,7 @@ from dbtqdm.db import EnvironError
 
 
 class MongoTqdm(DatabaseTqdm):
+    """ Class to create a TQDM process bar based on MongoDB. """
     def __init__(self, iterable: Iterable = None, desc: str = None, total: float = None, leave: bool = True,
                  file: Union[TextIOWrapper, StringIO] = None, n_cols: int = None, min_interval: float = 0.1,
                  max_interval: float = 10.0, miniters: Union[int, float] = None, ascii: Union[bool, str] = None,
@@ -15,7 +16,10 @@ class MongoTqdm(DatabaseTqdm):
                  dynamic_n_cols: bool = False, smoothing: float = 0.3, bar_format: str = None,
                  initial: Union[int, float] = 0, position: int = None, postfix: Union[dict, Any] = None,
                  unit_divisor: float = 1000, write_bytes: bool = None, lock_args: Tuple = None,
-                 n_rows: int = None, colour: str = None, delay: float = 0, gui: bool = False, **kwargs) -> None:
+                 n_rows: int = None, colour: str = None, delay: float = 0, gui: bool = False,
+                 mode: str = 'auto', database: str = 'tqdm', name: str = None, suffix: str = None,
+                 host: str = None, port: int = None, replicaset: str = None,
+                 **kwargs) -> None:
         """
         :param iterable: Iterable to decorate with a progressbar. Leave blank to manually manage the updates.
         :param desc: Prefix for the progressbar.
@@ -82,6 +86,7 @@ class MongoTqdm(DatabaseTqdm):
            the environment variable TQDM_PORT. By default, 27017.
         :param replicaset: Only for mode 'mongo'. The database replicaset. If it is not set, this function will check
            if there is the environment variable TQDM_REPLICASET. By default, do not use it.
+        :param database: The database name. By default, tqdm.
         :param bar_name: Only for mode 'mongo'. The bar progress name. If it is not set, this function will check if
            there is the environment variable TQDM_NAME. If it is not given, neither parameter o environment variable,
            then an exception is raised.
@@ -92,17 +97,22 @@ class MongoTqdm(DatabaseTqdm):
         :return:  decorated iterator.
         """
         self.__collection = None
-        self._mode = self._db_property('mode', 'TQDM_MODE', False, 'auto', **kwargs)
+        self._mode = self._db_property('mode', mode, 'TQDM_MODE', False, 'auto')
         if self._mode == 'mongo':
-            host, port, replicaset, db_name, bar_name, suffix = self.__db_properties(**kwargs)
-            self._database, self._bar_name, self._suffix = db_name, bar_name, suffix
+            host = self._db_property('host', host, 'TQDM_HOST', default=DEF_DB_HOST)
+            port = int(self._db_property('port', port, 'TQDM_PORT', default=DEF_DB_PORT))
+            replicaset = self._db_property('replicaset', replicaset, 'TQDM_REPLICASET')
+            database = self._db_property('db', database, 'TQDM_DB', default=DEF_DB_NAME)
+            bar_name = self._db_property('name', name, 'TQDM_NAME', required=True)
+            suffix = self._db_property('suffix', suffix, 'TQDM_SUFFIX', default='')
+            self._database, self._bar_name, self._suffix = database, bar_name, suffix
             if self.bar_name == STATS_COLLECTION:
                 raise ValueError(f'The bar_name parameter cannot be the reserved collection "{STATS_COLLECTION}".')
             from pymongo import ASCENDING, DESCENDING
             from dbtqdm.mongo import connect_db
 
             self.__client = connect_db(host, port, replicaset)
-            self.__db = self.__client[db_name]
+            self.__db = self.__client[database]
             self.__stats = self.__db[STATS_COLLECTION]
             if 'stats_ix' not in self.__stats.index_information():
                 self.__stats.create_index(
@@ -113,14 +123,14 @@ class MongoTqdm(DatabaseTqdm):
             self.__collection = self.__db[self.bar_id]
 
         self.disable = disable
-        self._remove_extra_parameters(['host', 'port', 'replicaset'], kwargs)
         super(MongoTqdm, self).__init__(iterable=iterable, desc=desc, total=total, leave=leave, file=file,
                                         n_cols=n_cols, min_interval=min_interval, max_interval=max_interval,
                                         miniters=miniters, ascii=ascii, disable=disable, unit=unit,
                                         unit_scale=unit_scale, dynamic_n_cols=dynamic_n_cols, smoothing=smoothing,
                                         bar_format=bar_format, initial=initial, position=position, postfix=postfix,
                                         unit_divisor=unit_divisor, write_bytes=write_bytes, lock_args=lock_args,
-                                        n_rows=n_rows, colour=colour, delay=delay, gui=gui, **kwargs)
+                                        n_rows=n_rows, colour=colour, delay=delay, gui=gui,
+                                        mode=self.mode, database=database, name=name, suffix=suffix, **kwargs)
 
     def __db_properties(self, **kwargs) -> Tuple[str, int, str, str, str, str]:
         """ Get the database connection parameters from the kwargs if they are defined or
