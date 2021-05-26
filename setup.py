@@ -40,7 +40,7 @@ setuptools.setup(
         'prepublish': PrepublishCommand,
     },
     name='db-tqdm',
-    version='1.0.7',
+    version='1.1.0',
     url='https://github.com/jmgomezsoriano/db-tqdm',
     license='lGPLv3',
     author='José Manuel Gómez Soriano',

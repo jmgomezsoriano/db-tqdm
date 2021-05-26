@@ -197,6 +197,11 @@ All these variables and parameters only work with the mode **mongo**. With mode 
 | replicaset | The replicaset for MongoDB. By default, it is not used.                                   |
 | db         | The database name where the progress bar states are stored. By default, '**tqdm**'.       |
 
+## Development
+
+### Frontend
+
+This module contains a user interface (UI) made by React JS. 
 
 ## To do
 

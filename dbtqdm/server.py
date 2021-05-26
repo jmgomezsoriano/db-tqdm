@@ -1,3 +1,4 @@
+import time
 from typing import Tuple, Union
 
 from flask import Flask, render_template, json, jsonify, Response
@@ -12,11 +13,11 @@ from dbtqdm.args.server import TqdmArgParser
 from dbtqdm.consts import DEF_TITLE, DEF_INTERVAL, DEF_DB_PORT, DEF_HOST, DEF_PORT, DEF_DB_HOST, DEF_DB_NAME, \
     STATS_COLLECTION
 
-app = Flask(__name__, template_folder='templates')
+app = Flask(__name__, template_folder='templates', static_folder='static')
 cors = CORS(app, resources={r"/api/*": {"origins": "*"}})
 CORS(app)
 logger = getLogger(__name__)
-TQDM_ROUTE, BAR_ROUTE, STATS_ROUTE, REMOVE_ROUTE = '/tqdm', '/bar', '/stats', '/remove'
+TQDM_ROUTE, BAR_ROUTE, STATS_ROUTE, REMOVE_ROUTE = '/api/tqdm', '/bar', '/api/stats', '/api/remove'
 web_title, interval = DEF_TITLE, DEF_INTERVAL * 1000
 
 
@@ -88,6 +89,11 @@ def all_tqdm() -> dict:
         'title': web_title,
         'bars': [bar_progress(db, name) for name in db.list_collection_names() if name != STATS_COLLECTION]
     }
+
+
+@app.route('/api/time')
+def get_current_time():
+    return {'time': time.time()}
 
 
 def bar_progress(db: Database, bar_id: str) -> dict:
