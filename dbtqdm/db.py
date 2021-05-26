@@ -181,9 +181,6 @@ class DatabaseTqdm(tqdm, ABC):
         """
         pass
 
-    # def disp(self, **kwargs):
-    #     return super(DatabaseTqdm, self).display(**kwargs)
-
     def display(self, msg: str = None, pos: int = None, **kwargs) -> bool:
         """ Display the TQDM bar progress. If the mode is 'auto', it will be displayed as usual.
           If not, it will update the database information with the new values of the bar progress.
