@@ -8,7 +8,7 @@ export default () => {
     const [bars, setBars] = useState([]);
     const [loading, setLoading] = useState(false);
     const [error, setError] = useState(false);
-
+    
     useEffect(() => {
         const intervalId = setInterval(() => {
             //assign interval to a variable to clear it.
@@ -30,14 +30,14 @@ export default () => {
                     setError(true);
                     setLoading(false);
                 });
-        }, 500);
+        }, 5000);
         return () => clearInterval(intervalId); //This is important
     }, []);
 
     const removeBar = (bar_name) => setBars(bars.filter((bar) => bar.bar_name !== bar_name));
 
     return (
-        <div className="App" style={{ display: 'flex' }}>
+        <div className="App row row-cols-1 row-cols-md-2 row-cols-lg-3 mb-3 text-center" >
             {bars.map((bar) => (
                 <Bar id={bar.bar_name} onClose={() => removeBar(bar.bar_name)} {...bar} />
             ))}

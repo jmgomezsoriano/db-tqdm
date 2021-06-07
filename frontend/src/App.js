@@ -5,11 +5,13 @@ import BarList from './BarList';
 
 export default () => (
     <Router>
-        <div>
-            <Switch>
-                <Route path="/bar/:bar_name" children={<BarDetails />} />
-                <Route path="/" children={<BarList />} />
-            </Switch>
-        </div>
+        <Switch>
+            <Route path="/bar/:bar_name" children={
+                    <BarDetails />
+            } />
+            <Route path="/" children={
+                    <BarList />
+            } />
+        </Switch>
     </Router>
 );

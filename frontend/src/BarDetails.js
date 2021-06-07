@@ -36,23 +36,18 @@ export default () => {
             <div className="card-body">
                 <p>{desc}</p>
                 <div className="progress" style={{ height: '30px' }}>
-                    <div
-                        id="test3-progress"
-                        className="progress-bar progress-bar-striped"
-                        role="progressbar"
+                    <div className="progress-bar progress-bar-striped" role="progressbar"
                         style={{ width: `${parseInt(percentage)}%`, backgroundColor: color }}>
                         {parseInt(percentage)}%
                     </div>
                 </div>
                 <h2 id="test3-speed" className="card-title pricing-card-title">
                     {rate.toFixed(2)} <span id="test3-primary-unit">{unit}</span>
-                    <small id="test3-secondary-unit" className="text-muted fw-light">
-                        /{secondary_unit}
-                    </small>
+                    <small className="text-muted fw-light">/{secondary_unit}</small>
                 </h2>
-                <ul id="test3-ulist" className="list-unstyled mt-3 mb-4">
+                <ul className="list-unstyled mt-3 mb-4">
                     <li>
-                        <b>Position:</b> <span>{n}</span>/<span id="test3-total">{total}</span>
+                        <b>Position:</b> <span>{n}</span>/<span>{total}</span>
                     </li>
                     <li>
                         <b>Elapsed:</b> <span>{elapsed_str}</span>

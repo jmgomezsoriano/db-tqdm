@@ -199,9 +199,54 @@ All these variables and parameters only work with the mode **mongo**. With mode 
 
 ## Development
 
-### Frontend
+In order to collaborate with this project, it is necessary to download all the source files from 
+[GitHub](https://github.com/jmgomezsoriano/db-tqdm) using the following command:
 
-This module contains a user interface (UI) made by React JS. 
+```shell
+git clone https://github.com/jmgomezsoriano/db-tqdm.git
+```
+
+Next, it is necessary to install the Python environment:
+
+```shell
+# Be sure that the Python interpreter is the version 3.7 or higher with python --version.
+python -m venv venv
+```
+
+Activate the virtual environment:
+
+```shell
+# Linux
+source venv/bin/activate
+# Windows
+venv\Scripts\activate
+```
+
+Install the requirements:
+
+```shell
+pip install -r requirements.txt
+```
+
+Finally, you can  execute the different elements of the db-tqdm in the development environment. 
+It is described in the following subsections.
+
+### Run the server backend and frontend 
+
+This module contains a web interface developed by Flask (backend) and React JS (frontend). 
+To run Flas backend you need to execute:
+
+```shell
+cd frontend
+yarn start-api
+```
+
+In order to run the React JS frontend, you need to open other terminal and execute:
+
+```shell
+cd frontend
+yarn start
+```
 
 ## To do
 

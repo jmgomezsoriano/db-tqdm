@@ -30,7 +30,7 @@ def home() -> str:
     return render_template('index.html', title=web_title, interval=interval)
 
 
-@app.route(BAR_ROUTE + '/<bar_id>')
+@app.route(BAR_ROUTE + '/<string:bar_id>')
 def bar_page(bar_id: str) -> str:
     """ Show a bar.
     :param: The id of the bar to show. This id is formed by the bar name and bar name suffix.
@@ -46,7 +46,7 @@ def health():
     return "I am ready!"
 
 
-@app.route(TQDM_ROUTE + '/<bar_id>', methods=['GET'])
+@app.route(TQDM_ROUTE + '/<string:bar_id>', methods=['GET'])
 def tqdm(bar_id: str) -> Union[dict, Tuple[Response, int]]:
     """ API to get the bar data give its id. If that progress bar is not active, then it will check the last finished
       progress bar with this id. If it does not exist, then return a error message.
@@ -65,7 +65,7 @@ def tqdm(bar_id: str) -> Union[dict, Tuple[Response, int]]:
     return jsonify(error=str(f'Bar progress "{bar_id}" does not exist.')), 404
 
 
-@app.route(REMOVE_ROUTE + '/<bar_id>', methods=['GET'])
+@app.route(REMOVE_ROUTE + '/<string:bar_id>', methods=['GET'])
 def remove(bar_id: str) -> Union[str, Tuple[Response, int]]:
     """ Remove a progress bar from the database. If the progress bar is still alive, then it will appear again
       in the next page updating.
