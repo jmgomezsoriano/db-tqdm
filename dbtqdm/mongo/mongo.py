@@ -18,8 +18,8 @@ class MongoTqdm(DatabaseTqdm):
                  unit_divisor: float = 1000, write_bytes: bool = None, lock_args: Tuple = None,
                  n_rows: int = None, colour: str = None, delay: float = 0, gui: bool = False,
                  mode: str = 'auto', database: str = 'tqdm', name: str = None, suffix: str = None,
-                 host: str = None, port: int = None, replicaset: str = None,
-                 **kwargs) -> None:
+                 host: str = None, port: int = None, replicaset: str = None, user: str = None, password: str = None,
+                 cert_key_file: str = None, ca_file: str = None, session_token: str = None, **kwargs) -> None:
         """
         :param iterable: Iterable to decorate with a progressbar. Leave blank to manually manage the updates.
         :param desc: Prefix for the progressbar.
@@ -103,15 +103,21 @@ class MongoTqdm(DatabaseTqdm):
             port = int(self._db_property('port', port, 'TQDM_PORT', default=DEF_DB_PORT))
             replicaset = self._db_property('replicaset', replicaset, 'TQDM_REPLICASET')
             database = self._db_property('db', database, 'TQDM_DB', default=DEF_DB_NAME)
+            user = self._db_property('db', user, 'TQDM_USER', default='')
+            password = self._db_property('db', password, 'TQDM_PASSWORD', default='')
             bar_name = self._db_property('name', name, 'TQDM_NAME', required=True)
             suffix = self._db_property('suffix', suffix, 'TQDM_SUFFIX', default='')
+            cert_key_file = self._db_property('suffix', cert_key_file, 'TQDM_CERT_KEY_FILE', default=None)
+            ca_file = self._db_property('suffix', ca_file, 'TQDM_CA_FILE', default=None)
+            session_token = self._db_property('suffix', session_token, 'TQDM_SESSION_TOKEN', default=None)
             self._database, self._bar_name, self._suffix = database, bar_name, suffix
             if self.bar_name == STATS_COLLECTION:
                 raise ValueError(f'The bar_name parameter cannot be the reserved collection "{STATS_COLLECTION}".')
             from pymongo import ASCENDING, DESCENDING
-            from dbtqdm.mongo import connect_db
+            from monutils import connect, Mode
 
-            self.__client = connect_db(host, port, replicaset)
+            self.__client = connect(host, port, replicaset, user, password,
+                                    Mode.AUTO, cert_key_file, ca_file, session_token)
             self.__db = self.__client[database]
             self.__stats = self.__db[STATS_COLLECTION]
             if 'stats_ix' not in self.__stats.index_information():

@@ -1,6 +1,6 @@
 from abc import ABC, ABCMeta, abstractmethod
 from io import TextIOWrapper, StringIO
-from typing import Iterable, Union, Any, Tuple, List
+from typing import Iterable, Union, Any, Tuple
 from os import environ
 from datetime import datetime, timedelta
 

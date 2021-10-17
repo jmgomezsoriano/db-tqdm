@@ -289,7 +289,7 @@ function exist_bar(id, bars) {
  */
 function update_bars() {
     $.ajax({
-    	url: $SCRIPT_ROOT + "/tqdm",
+    	url: $SCRIPT_ROOT + "api/tqdm",
     	success: function(data){
     		hide_error();
     		show_bars(data.bars);
@@ -308,8 +308,9 @@ function update_bars() {
  * @param {boolean} only - If the bar appears alone or together other progress bars.
  */
 function update_bar(bar_id, only = false) {
+	alert($SCRIPT_ROOT);
     $.ajax({
-    	url: $SCRIPT_ROOT + "/tqdm/" + bar_id,
+    	url: $SCRIPT_ROOT + "api/tqdm/" + bar_id,
     	success: function(data) {
     		hide_error();
     		show_bar(data, only);
@@ -328,7 +329,7 @@ function update_bar(bar_id, only = false) {
  */
 function remove_bar(bar_id) {
 	$.ajax({
-    	url: $SCRIPT_ROOT + "/remove/" + bar_id,
+    	url: $SCRIPT_ROOT + "api/remove/" + bar_id,
     	success: function(data) {
     		hide_error();
 			$("#" + bar_id).remove();

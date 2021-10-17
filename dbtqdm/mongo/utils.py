@@ -10,4 +10,6 @@ def connect_db(host: str = 'localhost', port: int = 27017, replicaset: Union[str
     :param replicaset: The replicaset. If None, then, replicaset is not used.
     :return: The MongoDB client.
     """
-    return MongoClient(host, port, replicaset=replicaset) if replicaset else MongoClient(host, port)
+    client = MongoClient(host, port, replicaset=replicaset) if replicaset else MongoClient(host, port)
+    client.list_database_names()
+    return client
