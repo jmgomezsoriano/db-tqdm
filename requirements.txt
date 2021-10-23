@@ -4,3 +4,4 @@ Jinja2==3.0.2
 uvicorn==0.15.0
 tqdm~=4.60.0,
 mysmallutils~=0.2.7
+importlib-resources~=5.1.3

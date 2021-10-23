@@ -4,19 +4,21 @@ from fastapi.staticfiles import StaticFiles
 from fastapi.responses import HTMLResponse
 from fastapi.templating import Jinja2Templates
 from logging import getLogger
+from importlib_resources import files
 
 from monutils import connect_database
 from mysutils.collections import del_keys
 from pymongo import DESCENDING
 from pymongo.database import Database
 
+import dbtqdm
 from dbtqdm.args.server import TqdmArgParser
 from dbtqdm.consts import DEF_TITLE, DEF_INTERVAL, DEF_DB_PORT, DEF_HOST, DEF_PORT, DEF_DB_HOST, DEF_DB_NAME, \
     STATS_COLLECTION
 
 app = FastAPI()
-app.mount("/static", StaticFiles(directory="static"), name="static")
-templates = Jinja2Templates(directory="templates")
+app.mount("/static", StaticFiles(directory=f'{files(dbtqdm)}/static'), name="static")
+templates = Jinja2Templates(directory=f'{files(dbtqdm)}/templates')
 logger = getLogger(__name__)
 TQDM_ROUTE, BAR_ROUTE, STATS_ROUTE, REMOVE_ROUTE = '/api/tqdm', '/api/bar', '/api/stats', '/api/remove'
 app.web_title, app.interval = DEF_TITLE, DEF_INTERVAL * 1000
