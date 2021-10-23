@@ -222,7 +222,7 @@ The TQDM_HOST and TQDM_PORT if only for the Web server.
 You can install the db-tqdm server by means a docker image.
 
 ```bash
-docker pull db-tqdm
+docker pull ialife/db-tqdm:1.1
 ```
 Remember you can define the [environment variables] to set the database connection.
 
