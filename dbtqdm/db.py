@@ -21,7 +21,7 @@ class DatabaseTqdm(tqdm, ABC):
     @property
     def mode(self) -> str:
         """
-        :return: The TQDM mode. 'auto' for normal tqdm auto mode or 'mongo' to use MongoDB database.
+        :return: The TQDM mode. 'normla' for normal tqdm normal mode or 'mongo' to use MongoDB database.
         """
         return self._mode
 
@@ -68,7 +68,7 @@ class DatabaseTqdm(tqdm, ABC):
                  initial: Union[int, float] = 0, position: int = None, postfix: Union[dict, Any] = None,
                  unit_divisor: float = 1000, write_bytes: bool = None, lock_args: Tuple = None,
                  n_rows: int = None, colour: str = None, delay: float = 0, gui: bool = False,
-                 mode: str = 'auto', database: str = 'tqdm', name: str = None, suffix: str = None, **kwargs) -> None:
+                 mode: str = 'normal', database: str = 'tqdm', name: str = None, suffix: str = None, **kwargs) -> None:
         """
         :param iterable: Iterable to decorate with a progressbar. Leave blank to manually manage the updates.
         :param desc: Prefix for the progressbar.
@@ -127,7 +127,7 @@ class DatabaseTqdm(tqdm, ABC):
         :param delay: Don't display until [default: 0] seconds have elapsed.
         :param gui: WARNING: internal parameter - do not use. Use tqdm.gui.tqdm(...) instead.
             If set, will attempt to use matplotlib animations for a graphical output [default: False].
-        :param mode: Two modes: auto (normal tqdm behavior), or mongo (using MongoDB as bar progress).
+        :param mode: Two modes: normal (normal tqdm behavior), or mongo (using MongoDB as bar progress).
             If it is not set, this function will check if there is the environment variable TQDM_MODE. By default, auto.
         :param database: The database name. By default, tqdm.
         :param bar_name: Only for mode 'mongo'. The bar progress name. If it is not set, this function will check if
@@ -139,13 +139,13 @@ class DatabaseTqdm(tqdm, ABC):
 
         :return:  decorated iterator.
         """
-        self._mode = self._db_property('mode', mode, 'TQDM_MODE', False, 'auto')
-        if self._mode not in ['auto', 'mongo']:
+        self._mode = self._db_property('mode', mode, 'TQDM_MODE', False, 'normal')
+        if self._mode not in ['normal', 'mongo']:
             raise EnvironError(f'The environment variable TQDM_MODE cannot be "{self._mode}". '
-                               f'The available values are: "auto" or "mongo".')
+                               f'The available values are: "normal" or "mongo".')
         if self.mode == 'mongo':
             try:
-                self._database = self._db_property('db', database, 'TQDM_DB', default=DEF_DB_NAME)
+                self._database = self._db_property('db', database, 'TQDM_DB_NAME', default=DEF_DB_NAME)
                 self._bar_name = self._db_property('name', name, 'TQDM_NAME', required=True)
                 self._suffix = self._db_property('suffix', suffix, 'TQDM_SUFFIX', default='')
             except KeyError as e:
@@ -182,14 +182,14 @@ class DatabaseTqdm(tqdm, ABC):
         pass
 
     def display(self, msg: str = None, pos: int = None, **kwargs) -> bool:
-        """ Display the TQDM bar progress. If the mode is 'auto', it will be displayed as usual.
+        """ Display the TQDM bar progress. If the mode is 'normal', it will be displayed as usual.
           If not, it will update the database information with the new values of the bar progress.
 
         :param msg: The bar message.
         :param pos: The current progress bar position.
         :return: True if anything was well, otherwise an exception is raised.
         """
-        if self._mode == 'auto':
+        if self._mode == 'normal':
             return super(DatabaseTqdm, self).display(msg, pos, **kwargs)
         self.format_dict['bar_name'] = self.bar_name
         self.format_dict['suffix'] = self.suffix

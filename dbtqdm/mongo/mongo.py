@@ -1,10 +1,15 @@
+import logging
 from collections import Iterable
 from io import StringIO, TextIOWrapper
 from typing import Tuple, Union, Any
 
+from pymongo.errors import ServerSelectionTimeoutError, OperationFailure, ConfigurationError
+
 from dbtqdm import DatabaseTqdm
 from dbtqdm.consts import STATS_COLLECTION, DEF_DB_HOST, DEF_DB_PORT, DEF_DB_NAME
 from dbtqdm.db import EnvironError
+
+logger = logging.getLogger(__name__)
 
 
 class MongoTqdm(DatabaseTqdm):
@@ -17,7 +22,7 @@ class MongoTqdm(DatabaseTqdm):
                  initial: Union[int, float] = 0, position: int = None, postfix: Union[dict, Any] = None,
                  unit_divisor: float = 1000, write_bytes: bool = None, lock_args: Tuple = None,
                  n_rows: int = None, colour: str = None, delay: float = 0, gui: bool = False,
-                 mode: str = 'auto', database: str = 'tqdm', name: str = None, suffix: str = None,
+                 mode: str = 'normal', database: str = 'tqdm', name: str = None, suffix: str = None,
                  host: str = None, port: int = None, replicaset: str = None, user: str = None, password: str = None,
                  cert_key_file: str = None, ca_file: str = None, session_token: str = None, **kwargs) -> None:
         """
@@ -81,12 +86,13 @@ class MongoTqdm(DatabaseTqdm):
         :param mode: Two modes: auto (normal tqdm behavior), or mongo (using MongoDB as bar progress).
             If it is not set, this function will check if there is the environment variable TQDM_MODE. By default, auto.
         :param host: Only for mode 'mongo'. The database host. If it is not set, this function will check if there is
-           the environment variable TQDM_HOST. By default, localhost.
+           the environment variable TQDM_DB_HOST. By default, localhost.
         :param port: Only for mode 'mongo'. The database port. If it is not set, this function will check if there is
-           the environment variable TQDM_PORT. By default, 27017.
+           the environment variable TQDM_DB_PORT. By default, 27017.
         :param replicaset: Only for mode 'mongo'. The database replicaset. If it is not set, this function will check
-           if there is the environment variable TQDM_REPLICASET. By default, do not use it.
-        :param database: The database name. By default, tqdm.
+           if there is the environment variable TQDM_DB_REPLICASET. By default, do not use it.
+        :param database: The database name. By default, tqdm.  If it is not set, this function will check
+           if there is the environment variable TQDM_DB_NAME. By default, "tqdm".
         :param bar_name: Only for mode 'mongo'. The bar progress name. If it is not set, this function will check if
            there is the environment variable TQDM_NAME. If it is not given, neither parameter o environment variable,
            then an exception is raised.
@@ -97,36 +103,42 @@ class MongoTqdm(DatabaseTqdm):
         :return:  decorated iterator.
         """
         self.__collection = None
-        self._mode = self._db_property('mode', mode, 'TQDM_MODE', False, 'auto')
+        self._mode = self._db_property('mode', mode, 'TQDM_MODE', False, 'normal')
         if self._mode == 'mongo':
-            host = self._db_property('host', host, 'TQDM_HOST', default=DEF_DB_HOST)
-            port = int(self._db_property('port', port, 'TQDM_PORT', default=DEF_DB_PORT))
-            replicaset = self._db_property('replicaset', replicaset, 'TQDM_REPLICASET')
-            database = self._db_property('db', database, 'TQDM_DB', default=DEF_DB_NAME)
-            user = self._db_property('db', user, 'TQDM_USER', default='')
-            password = self._db_property('db', password, 'TQDM_PASSWORD', default='')
+            host = self._db_property('host', host, 'TQDM_DB_HOST', default=DEF_DB_HOST)
+            port = int(self._db_property('port', port, 'TQDM_DB_PORT', default=DEF_DB_PORT))
+            replicaset = self._db_property('replicaset', replicaset, 'TQDM_DB_REPLICASET')
+            database = self._db_property('db', database, 'TQDM_DB_NAME', default=DEF_DB_NAME)
+            user = self._db_property('db', user, 'TQDM_DB_USER', default='')
+            password = self._db_property('db', password, 'TQDM_DB_PASSWORD', default='')
             bar_name = self._db_property('name', name, 'TQDM_NAME', required=True)
             suffix = self._db_property('suffix', suffix, 'TQDM_SUFFIX', default='')
-            cert_key_file = self._db_property('suffix', cert_key_file, 'TQDM_CERT_KEY_FILE', default=None)
-            ca_file = self._db_property('suffix', ca_file, 'TQDM_CA_FILE', default=None)
-            session_token = self._db_property('suffix', session_token, 'TQDM_SESSION_TOKEN', default=None)
+            cert_key_file = self._db_property('suffix', cert_key_file, 'TQDM_DB_CERT_KEY_FILE', default=None)
+            ca_file = self._db_property('suffix', ca_file, 'TQDM_DB_CA_FILE', default=None)
+            session_token = self._db_property('suffix', session_token, 'TQDM_DB_SESSION_TOKEN', default=None)
             self._database, self._bar_name, self._suffix = database, bar_name, suffix
             if self.bar_name == STATS_COLLECTION:
                 raise ValueError(f'The bar_name parameter cannot be the reserved collection "{STATS_COLLECTION}".')
-            from pymongo import ASCENDING, DESCENDING
-            from monutils import connect, Mode
+            try:
+                from monutils import connect
+                from pymongo import ASCENDING, DESCENDING
 
-            self.__client = connect(host, port, replicaset, user, password,
-                                    Mode.AUTO, cert_key_file, ca_file, session_token)
-            self.__db = self.__client[database]
-            self.__stats = self.__db[STATS_COLLECTION]
-            if 'stats_ix' not in self.__stats.index_information():
-                self.__stats.create_index(
-                    [('start_time', DESCENDING), ('bar_ix', ASCENDING)], name='stats_ix', unique=True)
-                self.__stats.create_index([('start_time', DESCENDING)], name='start_ix')
-                self.__stats.create_index('bar_id', name='bar_ix')
+                self.__client = connect(host, port, replicaset, user, password, cert_key_file, ca_file, session_token)
+                self.__db = self.__client[database]
+                self.__stats = self.__db[STATS_COLLECTION]
+                if 'stats_ix' not in self.__stats.index_information():
+                    self.__stats.create_index(
+                        [('start_time', DESCENDING), ('bar_ix', ASCENDING)], name='stats_ix', unique=True)
+                    self.__stats.create_index([('start_time', DESCENDING)], name='start_ix')
+                    self.__stats.create_index('bar_id', name='bar_ix')
 
-            self.__collection = self.__db[self.bar_id]
+                self.__collection = self.__db[self.bar_id]
+            except ImportError as e:
+                logger.warning('The monutils module is required, please, install:\n\npip install monutils~=0.1.3')
+                self._mode = 'normal'
+            except (ServerSelectionTimeoutError, OperationFailure, ConfigurationError) as e:
+                logger.warning(f'The connexion to the MongoDB database has not been done: {str(e)}.')
+                self._mode = 'normal'
 
         self.disable = disable
         super(MongoTqdm, self).__init__(iterable=iterable, desc=desc, total=total, leave=leave, file=file,
@@ -147,10 +159,10 @@ class MongoTqdm(DatabaseTqdm):
           environ variables.
         """
         try:
-            host = self._db_property('host', 'TQDM_HOST', default=DEF_DB_HOST, **kwargs)
-            port = int(self._db_property('port', 'TQDM_PORT', default=DEF_DB_PORT, **kwargs))
-            replicaset = self._db_property('replicaset', 'TQDM_REPLICASET', **kwargs)
-            database = self._db_property('db', 'TQDM_DB', default=DEF_DB_NAME, **kwargs)
+            host = self._db_property('host', 'TQDM_DB_HOST', default=DEF_DB_HOST, **kwargs)
+            port = int(self._db_property('port', 'TQDM_DB_PORT', default=DEF_DB_PORT, **kwargs))
+            replicaset = self._db_property('replicaset', 'TQDM_DB_REPLICASET', **kwargs)
+            database = self._db_property('db', 'TQDM_DB_NAME', default=DEF_DB_NAME, **kwargs)
             bar_name = self._db_property('name', 'TQDM_NAME', required=True, **kwargs)
             suffix = self._db_property('suffix', 'TQDM_SUFFIX', default='', **kwargs)
             return host, port, replicaset, database, bar_name, suffix

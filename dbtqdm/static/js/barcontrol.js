@@ -137,7 +137,7 @@ function create_bar(bar_id, bar, only = false) {
 		let see_btn = document.createElement('a');
 		see_btn.setAttribute('type', 'button');
 		see_btn.setAttribute('class', 'w-100 btn btn-lg btn-outline-success');
-		see_btn.setAttribute('href', $SCRIPT_ROOT + '/bar/' + bar_id);
+		see_btn.setAttribute('href', $SCRIPT_ROOT + 'api/bar/' + bar_id);
 		see_btn.textContent = 'Details';
 		body.append(see_btn);
 		// The close button
@@ -308,9 +308,8 @@ function update_bars() {
  * @param {boolean} only - If the bar appears alone or together other progress bars.
  */
 function update_bar(bar_id, only = false) {
-	alert($SCRIPT_ROOT);
     $.ajax({
-    	url: $SCRIPT_ROOT + "api/tqdm/" + bar_id,
+    	url: $SCRIPT_ROOT.replace('/api/bar/' + bar_id, "/api/tqdm/" + bar_id),
     	success: function(data) {
     		hide_error();
     		show_bar(data, only);

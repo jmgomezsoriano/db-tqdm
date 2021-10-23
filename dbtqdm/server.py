@@ -1,15 +1,12 @@
-from typing import Tuple, Union
-
 import uvicorn
 from fastapi import FastAPI, HTTPException, Request
 from fastapi.staticfiles import StaticFiles
 from fastapi.responses import HTMLResponse
 from fastapi.templating import Jinja2Templates
-# from flask import Flask, render_template, json, jsonify, Response
-# from flask_cors import CORS
 from logging import getLogger
 
-from monutils import connect, connect_database, Mode
+from monutils import connect_database
+from mysutils.collections import del_keys
 from pymongo import DESCENDING
 from pymongo.database import Database
 
@@ -20,10 +17,6 @@ from dbtqdm.consts import DEF_TITLE, DEF_INTERVAL, DEF_DB_PORT, DEF_HOST, DEF_PO
 app = FastAPI()
 app.mount("/static", StaticFiles(directory="static"), name="static")
 templates = Jinja2Templates(directory="templates")
-# app = Flask(__name__, template_folder='templates')
-# app = Flask(__name__, template_folder='templates', static_folder='static')
-# cors = CORS(app, resources={r"/api/*": {"origins": "*"}})
-# CORS(app)
 logger = getLogger(__name__)
 TQDM_ROUTE, BAR_ROUTE, STATS_ROUTE, REMOVE_ROUTE = '/api/tqdm', '/api/bar', '/api/stats', '/api/remove'
 app.web_title, app.interval = DEF_TITLE, DEF_INTERVAL * 1000
@@ -68,10 +61,9 @@ def tqdm(bar_id: str) -> dict:
 
     obj = app.db[STATS_COLLECTION].find_one({'bar_id': bar_id}, sort=[('start', DESCENDING)])
     if obj:
-        del obj['_id']
         obj['remaining_str'] = '0s'
         obj['start_str'] = '0s'
-        return obj
+        return del_keys(obj, '_id')
     raise HTTPException(404, f'Bar progress "{bar_id}" does not exist.')
 
 
@@ -125,13 +117,16 @@ def start_server(title: str = DEF_TITLE, host: str = DEF_HOST, port: int = DEF_P
     :param replicaset: The MongoDB replicaset.
     :param db_name: The database name.
     :param user: The database user.
-    :param password: The database password.
+    :param password: The user password.
+    :param cert_key_file: The database cert key file.
+    :param ca_file: The database CA file.
+    :param session_token: The database session token.
     :param seconds_interval: The interval between the web page refreshing.
     """
     # global db, web_title, interval
     app.web_title, app.interval = title, seconds_interval
     app.db = connect_database(db_host, db_port, replicaset, db_name, user, password,
-                              Mode.AUTO, cert_key_file, ca_file, session_token)
+                              cert_key_file, ca_file, session_token)
     uvicorn.run(app, host=host, port=port)
     # app.run(host, port)
 

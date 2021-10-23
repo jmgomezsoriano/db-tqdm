@@ -40,7 +40,7 @@ setuptools.setup(
         'prepublish': PrepublishCommand,
     },
     name='db-tqdm',
-    version='1.0.7',
+    version='1.1.0',
     url='https://github.com/jmgomezsoriano/db-tqdm',
     license='lGPLv3',
     author='José Manuel Gómez Soriano',
@@ -62,8 +62,8 @@ setuptools.setup(
     ],
     python_requires='>=3.7',
     install_requires=[
-        "tqdm==4.60.0",
-        "mysmallutils>=0.2.6"
+        "tqdm~=4.60.0",
+        "mysmallutils~=0.2.6"
     ],
     entry_points={
         'console_scripts': [

@@ -9,9 +9,11 @@ real information log data.
 
 This module, by default, works the same way that the standard TQDM module. Only if the mode parameter is changed by
 'mongo', or the environment variable 'TQDM_MODE' is defined with 'mongo', then the progress bar will store into a
-database. This module also include the Flask server in order to show this information with a browser like this:
+database. This module also include the Uvicorn server in order to show this information with a browser like this:
 
-![Example of DBTQDM progress bar](https://github.com/jmgomezsoriano/db-tqdm/raw/master/img/example01.jpg)
+![Example of DB-TQDM progress bar](https://github.com/jmgomezsoriano/db-tqdm/raw/master/img/example01.jpg)
+
+
 
 ## Install db-tqdm
 To install only need to do the following:
@@ -23,13 +25,13 @@ pip install db-tqdm
 If you are using the pymongo database instead the standard TQDM module, you need to install:
 
 ```shell
-pip install pymongo
+pip install monutils~=0.1.3
 ```
 
 If you are using also the web user interface, you need to install the following modules:
 
 ```shell
-pip install flask flask-cors
+pip install fastapi~=0.70.0 Jinja2~=3.0.2 uvicorn~=0.15.0
 ```
 
 ## Use tqdm based on db-tqdm module
@@ -51,7 +53,7 @@ This code will show in the suitable output the following progress bar as usual:
 Normal bar:  60%|██████    | 6/10 [00:06<00:04,  1.00s/it]
 ```
 
-However, if you define the environment variables TQDM_MODE to 'auto' and TQDM_NAME with a bar name 
+However, if you define the environment variables TQDM_MODE to 'normal' and TQDM_NAME with a bar name 
 (or put the suitable extra arguments to tqdm), the progress bar will not appear on the console output, 
 but the state of the progress bar will be stored in a MongoDB. For instance, the following code:
 
@@ -85,11 +87,28 @@ can switch between different user interfaces.
 
 The previous code assumes that the MongoDB is in local host and in the default port (27017). 
 However, if you want to change this default values, you can use the 'TQDM_DB_HOST', 'TQDM_DB_PORT' environment variables,
-or the 'host' or 'port' parameters in tqdm(). Also, you can define the 'TQDM_REPLICASET' environment variable, or
-the 'replicaset' parameter.
+or the 'host' or 'port' parameters in tqdm(). Also, you can define the following environment variables:
 
-By default, it will create a database called 'tqdm'. If you want to change the database name, you can use the
-environment variable 'TQDM_DB_NAME', or the parameter 'db' in tqdm(). For example:
+|Variable             |Description                                                                                   |
+|---------------------|----------------------------------------------------------------------------------------------|
+|TQDM_MODE            |If you want a normal or mongo bar progress. By default, normal.                               |                                    |
+|TQDM_NAME            |The bar progress name.                                                                        |
+|TQDM_SUFFIX          |The suffix of the bar progress name. This value is better to set by function parameter.       |                                    |
+|TQDM_HOST            |The Web server host address. By default, localhost.                                           |
+|TQDM_PORT            |The Web server port. By default, 5000.                                                        |
+|TQDM_TYPE            |The database type. In the current implementation only "mongo" is available. By default, mongo.|
+|TQDM_DB_HOST         |The database host address. By default, localhost.                                             |
+|TQDM_DB_PORT         |The database port. By default, 27017.                                                         |
+|TQDM_DB_REPLICASET   |The mongo replicaset. By default, none.                                                       |
+|TQDM_DB_NAME         |The database name. By default, tqdm.                                                          |
+|TQDM_DB_USER         |The database username. By default, none.                                                      |
+|TQDM_DB_PASSWORD     |The user password. By default, none.                                                          |
+|TQDM_DB_CERT_KEY_FILE|The certificate key file. By default, none.                                                   |
+|TQDM_DB_CA_FILE      |The CA file. By default, none.                                                                |
+|TQDM_INTERVAL        |The web refresh interval in seconds. By default, 5s.                                          |
+|TQDM_TITLE           |The web title. By default, 'Process monitors'.                                                |
+
+For example:
 
 ```python
 from dbtqdm.mongo import tqdm
@@ -109,8 +128,8 @@ I have the following environment variables defined outside my program:
 ```shell
 # Environment variable
 export TQDM_MODE='mongo'
-export TQDM_HOST='localhost'
-export TQDM_PORT=27017
+export TQDM_DB_HOST='localhost'
+export TQDM_DB_PORT=27017
 export TQDM_NAME='test1'
 ```
 
@@ -181,15 +200,15 @@ All these variables and parameters only work with the mode **mongo**. With mode 
 |-----------------|-------------------------------------------------------------------------------------|
 | TQDM_MODE       | The working mode of tqdm process bar:<br/><ul><li>'**auto**': Normal mode (by default).</li><li>'**mongo**': The MongoDB mode.</li></ul> |
 | TQDM_NAME       | The progress bar name. It will use to identify the progress bar among others.       |
-| TQDM_HOST       | The database host. By default, localhost.                                           |
-| TQDM_PORT       | The database port. By default, 27017.                                               |
-| TQDM_REPLICASET | The replicaset for MongoDB. By default, it is not used.                             |
+| TQDM_DB_HOST       | The database host. By default, localhost.                                           |
+| TQDM_DB_PORT       | The database port. By default, 27017.                                               |
+| TQDM_DB_REPLICASET | The replicaset for MongoDB. By default, it is not used.                             |
 | TQDM_DB_NAME    | The database name where the progress bar states are stored. By default, '**tqdm**'. |
 
 ### Parameters
 | Parameter  | Description                                                                                                   |
 |------------|-------------------------------------------------------------------------------------------|
-| mode       | The working mode of tqdm process bar:<br/><ul><li>'**auto**': Normal mode (by default).</li><li>'**mongo**': The MongoDB mode.</li></ul> |
+| mode       | The working mode of tqdm process bar:<br/><ul><li>'**normal**': Normal mode (by default).</li><li>'**mongo**': The MongoDB mode.</li></ul> |
 | name       | The progress bar name. It will use to identify the progress bar among others.             |
 | suffix     | The suffix to add to the bar name. Together the name, it will use to identify the progress bar among others in the case that there are multiple progress bars with the same name. |
 | host       | The database host. By default, localhost.                                                 |
