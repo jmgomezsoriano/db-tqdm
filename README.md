@@ -175,16 +175,16 @@ parameter:
 from dbtqdm.mongo import tqdm
 from time import sleep
 
-for _ in tqdm(range(0, 5000), desc=f'Description of the progress bar 1', colour='red', suffix='_bar1'):
-    sleep(1)
-
-for _ in tqdm(range(0, 5000), desc=f'Description of the progress bar 1', colour='red', suffix='_bar2'):
-    sleep(1)
+for _ in tqdm(range(0, 10), desc=f'Description of the progress bar 1', colour='red', suffix='_main'):
+    for _ in tqdm(range(0, 20), desc=f'Description of the progress bar 1', colour='yellow', suffix='_secondary'):
+        sleep(1)
 ```
 
 If you do not define the DB-TQDM environment variables, both progress bars will be normal ones,
 ignoring the suffix parameter. However, if you define those variables, you will have two progress bars with
-the name "test1_bar1" and "test1_bar2", respectively.
+the name "<bar_name>_main" and "<bar_name>_secondary", respectively.
+
+**Note:** At the moment, do not put spaces neither, the bar name nor bar suffix.
 
 As we can see above, using environment variables instead the parameters allow you to use exactly the same code in 
 different platforms (for example, local workstation or in remote airflow server), 
@@ -224,7 +224,15 @@ You can install the db-tqdm server by means a docker image.
 ```bash
 docker pull ialife/db-tqdm:1.1
 ```
-Remember you can define the [environment variables] to set the database connection.
+
+Remember you can define the [environment variables] to set the database connection. 
+For example, if you have the mongodb in your localhost, you can execute the following command to connect
+the service in the db-tqdm docker with your mongodb:
+
+```bash
+docker run -e TQDM_DB_USER=myusename -e TQDM_DB_PASSWORD=mypassword -e TQDM_DB_HOST=localhost \
+           -e ROOT_URL=http://localhost -e MONGO_URL=mongodb://localhost:27017 --network="host" ialife/db-tqdm
+```
 
 # To do<a id="to-do" name="to-do"></a>
 

@@ -29,10 +29,8 @@ def home(request: Request) -> templates.TemplateResponse:
     """ Show all the progress bar.
     :return: The home web page, which shows all the progress bars.
     """
-    # global web_title, interval
     return templates.TemplateResponse("index.html",
                                       {'title': app.web_title, 'interval': app.interval, 'request': request})
-    # return templates.get_template('index.html').render(title=web_title, interval=interval, request=request)
 
 
 @app.get(BAR_ROUTE + '/{bar_id}', response_class=HTMLResponse)
@@ -98,7 +96,7 @@ def bar_progress(db: Database, bar_id: str) -> dict:
     """ Obtain the progress bar information from MongoDB from its id.
     :param db: The database.
     :param bar_id: The bar id to remove. This id is formed by the bar name and bar name suffix.
-    :return: The
+    :return: A dictionary with the progress bar information.
     """
     bar = db[bar_id].find_one({})
     if bar and '_id' in bar:
@@ -125,12 +123,10 @@ def start_server(title: str = DEF_TITLE, host: str = DEF_HOST, port: int = DEF_P
     :param session_token: The database session token.
     :param seconds_interval: The interval between the web page refreshing.
     """
-    # global db, web_title, interval
     app.web_title, app.interval = title, seconds_interval
     app.db = connect_database(db_host, db_port, replicaset, db_name, user, password,
                               cert_key_file, ca_file, session_token)
     uvicorn.run(app, host=host, port=port)
-    # app.run(host, port)
 
 
 def main() -> None:
