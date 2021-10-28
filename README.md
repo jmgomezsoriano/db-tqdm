@@ -56,7 +56,7 @@ You can execute the db-tqdm server in both, docker image or natively. If you cho
 you can use the following command:
 
 ```bash
-usage: dbtqdm [-h] [-H HOST] [-P PORT] [-t TYPE] [--db_host HOST] [--db_port PORT]
+usage: dbtqdm [-h] [-H HOST] [-P PORT] [-t TYPE] [--db_host HOST] [--db_port PORT] [--root_path PATH] 
               [-r NAME] [-d NAME] [-u USER] [-p PASS] [--cert_key_file FILE] 
               [--ca_file FILE] [--session_token SESSION] [-i SECONDS] [TITLE]
 
@@ -69,6 +69,7 @@ optional arguments:
   -h, --help            show this help message and exit
   -H HOST, --host HOST  The server host. By default, localhost.
   -P PORT, --port PORT  The server port. By default, 5000.
+  --root_path PATH      The server root path. By default, "/".
   -t TYPE, --db_type TYPE
                         The database host. By default, mongo. Available databases: ['mongo'].
   --db_host HOST        The database host. By default, localhost.

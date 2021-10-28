@@ -144,7 +144,7 @@ class TqdmArgParser(object):
         parser.add_argument('-P', '--port', type=int, metavar='PORT', default=port,
                             help=f'The server port. By default, {port}.')
         parser.add_argument('--root_path', type=str, metavar='PATH', default=root_path,
-                            help=f'The server root path. By default, {root_path}.')
+                            help=f'The server root path. By default, "{root_path}".')
         parser.add_argument('-t', '--db_type', type=str.lower, metavar='TYPE', default=db_type, choices=DB_TYPES,
                             help=f'The database host. By default, {db_type}. Available databases: {DB_TYPES}.')
         parser.add_argument('--db_host', type=str, metavar='HOST', default=db_host,
