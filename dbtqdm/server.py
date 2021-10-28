@@ -1,3 +1,5 @@
+from os import environ
+
 import uvicorn
 from fastapi import FastAPI, HTTPException, Request
 from fastapi.staticfiles import StaticFiles
@@ -14,8 +16,9 @@ from pymongo.database import Database
 import dbtqdm
 from dbtqdm.args.server import TqdmArgParser
 from dbtqdm.consts import DEF_TITLE, DEF_INTERVAL, DEF_DB_PORT, DEF_HOST, DEF_PORT, DEF_DB_HOST, DEF_DB_NAME, \
-    STATS_COLLECTION
+    STATS_COLLECTION, DEF_ROOT_PATH
 
+# root_path = environ['ROOT_PATH'] if 'ROOT_PATH' in environ else ''
 app = FastAPI()
 app.mount("/static", StaticFiles(directory=f'{files(dbtqdm)}/static'), name="static")
 templates = Jinja2Templates(directory=f'{files(dbtqdm)}/templates')
@@ -104,9 +107,10 @@ def bar_progress(db: Database, bar_id: str) -> dict:
     return bar
 
 
-def start_server(title: str = DEF_TITLE, host: str = DEF_HOST, port: int = DEF_PORT,  db_host: str = DEF_DB_HOST,
-                 db_port: int = DEF_DB_PORT, replicaset: str = None, db_name: str = DEF_DB_NAME,
-                 user: str = '', password: str = '', cert_key_file: str = None, ca_file: str = None,
+def start_server(title: str = DEF_TITLE, host: str = DEF_HOST, port: int = DEF_PORT,  root_path: str = DEF_ROOT_PATH,
+                 db_host: str = DEF_DB_HOST, db_port: int = DEF_DB_PORT, replicaset: str = None,
+                 db_name: str = DEF_DB_NAME, user: str = '', password: str = '',
+                 cert_key_file: str = None, ca_file: str = None,
                  session_token: str = None, seconds_interval: int = DEF_INTERVAL * 1000) -> None:
     """ Start the server.
     :param title: The web page title.
@@ -126,13 +130,14 @@ def start_server(title: str = DEF_TITLE, host: str = DEF_HOST, port: int = DEF_P
     app.web_title, app.interval = title, seconds_interval
     app.db = connect_database(db_host, db_port, replicaset, db_name, user, password,
                               cert_key_file, ca_file, session_token)
+    app.root_path = root_path
     uvicorn.run(app, host=host, port=port)
 
 
 def main() -> None:
     """ The main function. """
     args = TqdmArgParser()
-    start_server(args.title, args.host, args.port, args.db_host, args.db_port, args.replicaset, args.database,
+    start_server(args.title, args.host, args.port, args.root_path, args.db_host, args.db_port, args.replicaset, args.database,
                  args.user, args.password, args.cert_key_file, args.ca_file, args.session_token, args.interval)
 
 

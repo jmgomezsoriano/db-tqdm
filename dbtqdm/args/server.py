@@ -2,7 +2,7 @@ from argparse import ArgumentParser
 from os import environ
 
 from dbtqdm.consts import DEF_HOST, DEF_PORT, DEF_DB_HOST, DEF_DB_PORT, DEF_DB_NAME, DEF_INTERVAL, DEF_TITLE, \
-    DEF_DB_TYPE, DB_TYPES
+    DEF_DB_TYPE, DB_TYPES, DEF_ROOT_PATH
 
 
 class TqdmArgParser(object):
@@ -27,6 +27,13 @@ class TqdmArgParser(object):
         :return: The server port. By default, 5000.
         """
         return self._args.port
+
+    @property
+    def root_path(self) -> str:
+        """
+        :return: The server root path.
+        """
+        return self._args.root_path
 
     @property
     def db_type(self) -> str:
@@ -118,6 +125,7 @@ class TqdmArgParser(object):
         """
         host = environ.get('TQDM_HOST', DEF_HOST)
         port = environ.get('TQDM_PORT',DEF_PORT)
+        root_path = environ.get('TQDM_ROOT_PATH',DEF_ROOT_PATH)
         db_type = environ.get('TQDM_TYPE', DEF_DB_TYPE)
         db_host = environ.get('TQDM_DB_HOST', DEF_DB_HOST)
         db_port = environ.get('TQDM_DB_PORT', DEF_DB_PORT)
@@ -135,6 +143,8 @@ class TqdmArgParser(object):
                             help=f'The server host. By default, {host}.')
         parser.add_argument('-P', '--port', type=int, metavar='PORT', default=port,
                             help=f'The server port. By default, {port}.')
+        parser.add_argument('--root_path', type=str, metavar='PATH', default=root_path,
+                            help=f'The server root path. By default, {root_path}.')
         parser.add_argument('-t', '--db_type', type=str.lower, metavar='TYPE', default=db_type, choices=DB_TYPES,
                             help=f'The database host. By default, {db_type}. Available databases: {DB_TYPES}.')
         parser.add_argument('--db_host', type=str, metavar='HOST', default=db_host,
