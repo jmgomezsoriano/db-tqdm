@@ -130,7 +130,7 @@ class MongoTqdm(DatabaseTqdm):
                             [
                                 ('start_time', DESCENDING),
                                 ('bar_ix', ASCENDING)
-                                ],
+                            ],
                             name='stats_ix', unique=True)
                         self.__stats.create_index([('start_time', DESCENDING)], name='start_ix')
                         self.__stats.create_index('bar_id', name='bar_ix')
