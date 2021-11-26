@@ -128,6 +128,9 @@ def start_server(title: str = DEF_TITLE, host: str = DEF_HOST, port: int = DEF_P
     :param seconds_interval: The interval between the web page refreshing.
     """
     app.web_title, app.interval = title, seconds_interval
+    logger.info(f'Starting the server with this parameters:\nHost: {host}\nPort: {port}\nRoot path: {root_path}\n'
+                f'DB host: {db_host}\nDB port: {db_port}\nºReplicaset: {replicaset}\n')
+    logger.info('Starting the server with this parameters:')
     app.db = connect_database(db_host, db_port, replicaset, db_name, user, password,
                               cert_key_file, ca_file, session_token)
     app.root_path = root_path

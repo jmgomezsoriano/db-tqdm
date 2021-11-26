@@ -3,8 +3,6 @@ from collections import Iterable
 from io import StringIO, TextIOWrapper
 from typing import Tuple, Union, Any
 
-from pymongo.errors import ServerSelectionTimeoutError, OperationFailure, ConfigurationError
-
 from dbtqdm import DatabaseTqdm
 from dbtqdm.consts import STATS_COLLECTION, DEF_DB_HOST, DEF_DB_PORT, DEF_DB_NAME
 from dbtqdm.db import EnvironError
@@ -122,22 +120,27 @@ class MongoTqdm(DatabaseTqdm):
             try:
                 from monutils import connect
                 from pymongo import ASCENDING, DESCENDING
+                from pymongo.errors import ServerSelectionTimeoutError, OperationFailure, ConfigurationError
+                try:
+                    self.__client = connect(host, port, replicaset, user, password, cert_key_file, ca_file, session_token)
+                    self.__db = self.__client[database]
+                    self.__stats = self.__db[STATS_COLLECTION]
+                    if 'stats_ix' not in self.__stats.index_information():
+                        self.__stats.create_index(
+                            [
+                                ('start_time', DESCENDING),
+                                ('bar_ix', ASCENDING)
+                                ],
+                            name='stats_ix', unique=True)
+                        self.__stats.create_index([('start_time', DESCENDING)], name='start_ix')
+                        self.__stats.create_index('bar_id', name='bar_ix')
 
-                self.__client = connect(host, port, replicaset, user, password, cert_key_file, ca_file, session_token)
-                self.__db = self.__client[database]
-                self.__stats = self.__db[STATS_COLLECTION]
-                if 'stats_ix' not in self.__stats.index_information():
-                    self.__stats.create_index(
-                        [('start_time', DESCENDING), ('bar_ix', ASCENDING)], name='stats_ix', unique=True)
-                    self.__stats.create_index([('start_time', DESCENDING)], name='start_ix')
-                    self.__stats.create_index('bar_id', name='bar_ix')
-
-                self.__collection = self.__db[self.bar_id]
+                    self.__collection = self.__db[self.bar_id]
+                except (ServerSelectionTimeoutError, OperationFailure, ConfigurationError) as e:
+                    logger.warning(f'The connexion to the MongoDB database has not been done: {str(e)}.')
+                    self._mode = 'normal'
             except ImportError as e:
-                logger.warning('The monutils module is required, please, install:\n\npip install monutils~=0.1.3')
-                self._mode = 'normal'
-            except (ServerSelectionTimeoutError, OperationFailure, ConfigurationError) as e:
-                logger.warning(f'The connexion to the MongoDB database has not been done: {str(e)}.')
+                logger.warning('The monutils module is required, please, install:\n\npip install monutils>=0.1.3,<2.0')
                 self._mode = 'normal'
 
         self.disable = disable
